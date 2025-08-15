@@ -5,7 +5,7 @@ from .abstract_ocr_adapter import AbstractOCRAdapter
 class EasyOCRAdapter(AbstractOCRAdapter):
     def __init__(self, lenguages):
         super().__init__()
-        self._ocr_reader = easyocr.Reader(lenguages)
+        self._ocr_reader = easyocr.Reader(lenguages, gpu=True)
         
     def extract_image_text(self, image):
         try:

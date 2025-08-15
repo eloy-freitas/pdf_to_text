@@ -1,3 +1,4 @@
+import sys
 from concurrent.futures import ThreadPoolExecutor
 
 from src.utils.log.log_utils import LogUtils
@@ -13,7 +14,7 @@ def main(
     file_name: str,
     document_bits: str,
     lenguages: list[str] = ['en', 'pt'],
-    max_workers: int = 3,
+    max_workers: int = 2,
     num_rows: int = 35,
     num_colums: int = 20
 ):
@@ -41,21 +42,47 @@ def main(
         pdf_to_image_service=pdf_to_image_service,
         ocr_text_formater_service=ocr_text_formater_service,
         log_utils=log_utils,
-        num_rows=num_rows,
-        num_columns=num_colums
+        num_rows=max(num_rows, 10),
+        num_columns=max(num_colums, 35)
     )
     
     return pdf_to_text_controller.run(file_name=file_name, document_bits=document_bits)
 
 if __name__ == '__main__':
+        
+    try:
+        file_name = sys.argv[1]
+    except ValueError as e:
+        raise ValueError(f'Invalid file_name')
+    try:
+        num_rows_arg = sys.argv[2]
+        num_colums_arg = sys.argv[3]
+    except:
+        num_rows_arg = None
+        num_colums_arg = None
     
-    file_name = 'AP - PAMELA MADEIRA MARQUES - ARGO.pdf'
+    if num_rows_arg:
+        try:
+            num_rows = int(num_rows_arg)
+            print(num_rows)
+        except ValueError as e:
+            raise ValueError(f'num_rows must be int')
+    else:
+        num_rows = 35
+        
+    if num_colums_arg:
+        try:
+            num_colums = int(num_colums_arg)
+            print(num_colums)
+        except ValueError as e:
+            raise ValueError(f'num_colums_arg must be int')
+    else:
+        num_colums = 20
 
     with open(file_name, "rb") as file:
         encoded_string = file.read()
     
-    #print(encoded_string)
-    result = main(file_name, encoded_string, num_colums=30, num_rows=50)    
+    result = main(file_name, encoded_string, num_rows=num_rows, num_colums=num_colums)    
     
     with open(f'{file_name}.txt', "w") as file:
         file.write(result)

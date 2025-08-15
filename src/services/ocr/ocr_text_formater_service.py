@@ -107,7 +107,7 @@ class OCRTextFormaterService:
             start_pos = row['x']
             
             if start_pos > prev_end:
-                spaces = ' ' * int((start_pos - prev_end) / 6) 
+                spaces = ' ' * int((start_pos - prev_end) / 8) 
                 line_text.append(spaces)
             
             line_text.append(row['text'])
