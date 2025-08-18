@@ -8,6 +8,12 @@ logging.basicConfig(
 )
 
 class LogUtils:
+    """
+    Utility class for configuring and managing application logging.
+    
+    This class provides a centralized way to set up logging configuration
+    and obtain logger instances throughout the application.
+    """
     def __init__(self):
         pass
 
