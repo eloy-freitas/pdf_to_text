@@ -1,4 +1,4 @@
-import sys
+import argparse
 from concurrent.futures import ThreadPoolExecutor
 
 from src.utils.log.log_utils import LogUtils
@@ -12,9 +12,7 @@ from src.services.ocr.ocr_text_formatter_service import OCRTextFormatterService
 from src.services.ocr.ocr_adapters.easyocr_adapter import EasyOCRAdapter
 
 
-def main(
-    file_name: str,
-    document_bits: bytes,
+def create_controller(
     languages: list[str] | None = None,
     max_workers: int = 2,
     num_rows: int = 35,
@@ -24,39 +22,7 @@ def main(
     gpu: bool = True,
     poppler_path: str = None
 ):
-    if num_rows:
-        try:
-            num_rows = int(num_rows)
-        except ValueError as e:
-            raise ValueError(f'num_rows must be int')
-    else:
-        num_rows = 35
-        
-    if num_columns:
-        try:
-            num_columns = int(num_columns)
-        except ValueError as e:
-            raise ValueError(f'num_columns must be int')
-    else:
-        num_columns = 20
-
-    if space_redutor:
-        try:
-            space_redutor = abs(int(space_redutor))
-        except ValueError as e:
-            raise ValueError(f'space_redutor must be int and positive')
-    else:
-        space_redutor = 8
-    
-    if font_size_regulator:
-        try:
-            font_size_regulator = abs(int(font_size_regulator))
-        except ValueError as e:
-            raise ValueError(f'font_size_regulator must be int and positive')
-    else:
-        font_size_regulator = 6
-
-    languages = languages or ['en', 'pt']
+    languages = languages or ["en", "pt"]
     log_utils = LogUtils()
     pdf2image_adapter = PDF2ImageAdapter(poppler_path=poppler_path)
     filetype_adapter = FIletypeAdapter()
@@ -90,47 +56,38 @@ def main(
         font_size_regulator=font_size_regulator
     )
     
-    return pdf_to_text_controller.run(file_name=file_name, document_bits=document_bits)
+    return pdf_to_text_controller
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    try:
-        file_name = sys.argv[1]
-    except IndexError as e:
-        raise IndexError(f'Invalid file_name')
-    try:
-        num_rows = sys.argv[2]
-    except IndexError:
-        num_rows = None
-    try:
-        num_columns = sys.argv[3]
-    except IndexError:
-        num_columns = None
-    try:
-        space_redutor = sys.argv[4]
-    except IndexError:
-        space_redutor = None
-    try:
-        font_size_regulator = sys.argv[5]
-    except IndexError:
-        font_size_regulator = None
-    try:
-        poppler_path = sys.argv[6]
-    except IndexError:
-        poppler_path = None
+    parser = argparse.ArgumentParser(description="OCR Formatter options.")
 
-    with open(file_name, "rb") as file:
-        encoded_string = file.read()
+    parser.add_argument("-f", "--file_name", type=str, required=True, help="Input file name")
+    parser.add_argument("-c", "--num_columns", type=int, required=False, default = 20, help="Number of columns of per page of the document (regulate the text position on x axis). default = 20")
+    parser.add_argument("-r", "--num_rows", type=int, required=False, default = 35, help="Number of rows per page of the document (regulate the text position on y axis). default = 35")
+    parser.add_argument("-s", "--space_redutor", type=int, required=False, default = 8, help="Used to smooth out the addition of tabs before each word on a line. (the higher the value, the fewer tabs will be added). default = 8")
+    parser.add_argument("-z", "--font_size_regulator", type=int, required=False, default = 6, help="Used to compensate for spacing based on the font of the text in the document. If your document contains text in a large font size, consider increasing this value so the text doesn't appear too sparse. default = 6")
+    parser.add_argument("-w", "--max_workers", type=int, required=False, default = 2, help="Max of parallel page processing. This will increse the GPU usage. default = 2")
+    parser.add_argument("-p", "--poppler_path", type=str, required=False, default = None, help="Path of installation of poppler binaries. Pass the path of the /bin folder in the folder of installation of the poppler. (Window users https://github.com/oschwartz10612/poppler-windows/releases). default = None")
+    parser.add_argument("-o", "--file_name_output", type=str, required=True, help="File name output")
+    parser.add_argument("-l", "--languages", type=list, required=False, default=['en', 'pt'], help="Language of document. default = ['en', 'pt']")
+
+    args = parser.parse_args()
+
+    with open(f'{args.file_name}', "rb") as file:
+        document_bits = file.read()
     
-    result = main(
-        file_name, 
-        encoded_string, 
-        num_rows=num_rows, 
-        num_columns=num_columns,
-        space_redutor=space_redutor,
-        font_size_regulator=font_size_regulator,
-        poppler_path=poppler_path
+    pdf_to_text_controller = create_controller(
+        languages=args.languages,
+        num_rows=args.num_rows, 
+        num_columns=args.num_columns,
+        space_redutor=args.space_redutor,
+        font_size_regulator=args.font_size_regulator,
+        poppler_path=args.poppler_path,
+        max_workers=args.max_workers
     )    
+
+    result = pdf_to_text_controller.run(file_name=args.file_name, document_bits=document_bits)
     
-    with open(f'{file_name}.txt', "w") as file:
+    with open(fr"{args.file_name}.txt", "w") as file:
         file.write(result)
