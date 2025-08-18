@@ -1,14 +1,14 @@
 from src.model.process_object import ProcessObject
 from src.utils.log.log_utils import LogUtils
 from src.services.file.pdf_to_image_service import PdfToImageService
-from src.services.ocr.ocr_text_formater_service import OCRTextFormaterService
+from src.services.ocr.ocr_text_formatter_service import OCRTextFormatterService
 
 class PDFToTextController:
     
     def __init__(
         self,
         pdf_to_image_service: PdfToImageService,
-        ocr_text_formater_service: OCRTextFormaterService,
+        ocr_text_formatter_service: OCRTextFormatterService,
         log_utils: LogUtils,
         num_rows: int = 35,
         num_columns: int = 20,
@@ -16,7 +16,7 @@ class PDFToTextController:
         font_size_regulator: int = 6
     ):
         self._pdf_to_image_service = pdf_to_image_service
-        self._ocr_text_formater_service = ocr_text_formater_service
+        self._ocr_text_formatter_service = ocr_text_formatter_service
         self._num_rows = num_rows
         self._num_columns = num_columns
         self._space_redutor = space_redutor
@@ -30,11 +30,11 @@ class PDFToTextController:
             process_object['file_name'] = file_name
             process_object['document_bits'] = document_bits
             
-            process_object = self._pdf_to_image_service.handle_hequest(
+            process_object = self._pdf_to_image_service.handle_request(
                 process_object=process_object
             )
             
-            process_object = self._ocr_text_formater_service.handle_request(
+            process_object = self._ocr_text_formatter_service.handle_request(
                 process_object=process_object,
                 num_rows=self._num_rows,
                 num_columns=self._num_columns,

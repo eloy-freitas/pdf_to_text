@@ -6,7 +6,7 @@ from src.model.process_object import ProcessObject
 from src.services.ocr.ocr_adapters.abstract_ocr_adapter import AbstractOCRAdapter
 
 
-class OCRTextFormaterService:
+class OCRTextFormatterService:
     def __init__(
         self,
         ocr_adapter: AbstractOCRAdapter,
@@ -17,7 +17,7 @@ class OCRTextFormaterService:
         self._ocr_pool_executor = ocr_pool_executor
         self._logger = log_utils.get_logger(__name__)
     
-    def create_dataset(self, dataset):
+    def _create_dataset(self, dataset):
         tbl = pd.DataFrame(dataset).astype({'text': 'string'})
         if tbl.empty:
             return tbl
@@ -27,7 +27,7 @@ class OCRTextFormaterService:
         
         return tbl
 
-    def calculate_axis_frequency(
+    def _calculate_axis_frequency(
         self,
         dataset: pd.DataFrame, 
         axis_source_name: str, 
@@ -44,7 +44,7 @@ class OCRTextFormaterService:
         
         return faixas
 
-    def map_text_positions(
+    def _map_text_positions(
         self, 
         dataset: pd.DataFrame, 
         num_rows: int=80,
@@ -57,7 +57,7 @@ class OCRTextFormaterService:
         row_source_name_range = f'range_{row_source_name}'
         column_source_name_range = f'range_{column_source_name}'
         
-        rows = self.calculate_axis_frequency(
+        rows = self._calculate_axis_frequency(
             dataset=dataset, 
             axis_source_name=row_source_name, 
             axis_target_name=row_target_name, 
@@ -65,7 +65,7 @@ class OCRTextFormaterService:
             bins=num_rows
         )
         
-        columns = self.calculate_axis_frequency(
+        columns = self._calculate_axis_frequency(
             dataset=dataset, 
             axis_source_name=column_source_name, 
             axis_target_name=column_target_name,
@@ -88,7 +88,7 @@ class OCRTextFormaterService:
         
         return merge
 
-    def extract_formated_text_from_image(
+    def _extract_formated_text_from_image(
         self,
         ocr_output: object, 
         num_rows: int = 35, 
@@ -101,14 +101,14 @@ class OCRTextFormaterService:
         try:
             dataset = self._ocr_adapter.calculate_text_position(ocr_output)
             
-            dataset = self.create_dataset(dataset)
-            dataset = self.map_text_positions(dataset, num_rows, num_columns)
-            text = self.format_output(dataset, space_redutor, font_size_regulator)
+            dataset = self._create_dataset(dataset)
+            dataset = self._map_text_positions(dataset, num_rows, num_columns)
+            text = self._format_output(dataset, space_redutor, font_size_regulator)
             return text
         except Exception as e:
             raise Exception(f'Fail on format ocr output: \n {e}')
 
-    def format_line(
+    def _format_line(
         self, 
         dataset: pd.DataFrame, 
         space_redutor: int = 8, 
@@ -129,7 +129,7 @@ class OCRTextFormaterService:
         
         return ''.join(line_text)
 
-    def format_output(
+    def _format_output(
         self, 
         dataset: pd.DataFrame, 
         space_redutor: int = 8, 
@@ -139,7 +139,7 @@ class OCRTextFormaterService:
         grouped = dataset.groupby('row')
         reconstructed_doc = []
         for _, group in grouped:
-            reconstructed_doc.append(self.format_line(group, space_redutor, font_size_regulator))
+            reconstructed_doc.append(self._format_line(group, space_redutor, font_size_regulator))
 
         reconstructed_doc.reverse()
 
@@ -147,7 +147,7 @@ class OCRTextFormaterService:
         
         return final_text
     
-    def process_document_text(
+    def _process_document_text(
         self, 
         image_name: str, 
         page_id: int, 
@@ -161,7 +161,7 @@ class OCRTextFormaterService:
         
         ocr_output = self._ocr_adapter.extract_image_text(image)
         
-        formated_text = self.extract_formated_text_from_image(
+        formated_text = self._extract_formated_text_from_image(
             ocr_output=ocr_output,
             num_rows=num_rows,
             num_columns=num_columns,
@@ -181,7 +181,7 @@ class OCRTextFormaterService:
     ):
         document_futures = [
             self._ocr_pool_executor.submit(
-                self.process_document_text, 
+                self._process_document_text, 
                 image_name,
                 meta_data['id'],
                 meta_data['image'],

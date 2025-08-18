@@ -2,12 +2,13 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 
 from src.utils.log.log_utils import LogUtils
-from src.utils.file.file_utils import FileUtils
+from src.utils.file.adapters.pdf2image_adapter import PDF2ImageAdapter
+from src.utils.file.adapters.filetype_adapter import FIletypeAdapter
 
 from src.controller.pdf_to_text_controller import PDFToTextController
 
 from src.services.file.pdf_to_image_service import PdfToImageService
-from src.services.ocr.ocr_text_formater_service import OCRTextFormaterService
+from src.services.ocr.ocr_text_formatter_service import OCRTextFormatterService
 from src.services.ocr.ocr_adapters.easyocr_adapter import EasyOCRAdapter
 
 
@@ -20,7 +21,8 @@ def main(
     num_columns: int = 20,
     space_redutor: int = 8, 
     font_size_regulator: int = 6,
-    gpu: bool = True
+    gpu: bool = True,
+    poppler_path: str = None
 ):
     if num_rows:
         try:
@@ -56,7 +58,8 @@ def main(
 
     languages = languages or ['en', 'pt']
     log_utils = LogUtils()
-    file_utils = FileUtils()
+    pdf2image_adapter = PDF2ImageAdapter(poppler_path=poppler_path)
+    filetype_adapter = FIletypeAdapter()
     
     ocr_pool_executor = ThreadPoolExecutor(max_workers=max_workers)
     
@@ -66,10 +69,11 @@ def main(
     )
     
     pdf_to_image_service = PdfToImageService(
-        file_utils=file_utils
+        filetype_adapter=filetype_adapter,
+        pdf2image_adapter=pdf2image_adapter
     )
     
-    ocr_text_formater_service = OCRTextFormaterService(
+    ocr_text_formatter_service = OCRTextFormatterService(
         log_utils=log_utils,
         ocr_adapter=easyocr_adapter,
         ocr_pool_executor=ocr_pool_executor
@@ -78,7 +82,7 @@ def main(
     
     pdf_to_text_controller = PDFToTextController(
         pdf_to_image_service=pdf_to_image_service,
-        ocr_text_formater_service=ocr_text_formater_service,
+        ocr_text_formatter_service=ocr_text_formatter_service,
         log_utils=log_utils,
         num_rows=num_rows,
         num_columns=num_columns,
@@ -110,6 +114,10 @@ if __name__ == '__main__':
         font_size_regulator = sys.argv[5]
     except IndexError:
         font_size_regulator = None
+    try:
+        poppler_path = sys.argv[6]
+    except IndexError:
+        poppler_path = None
 
     with open(file_name, "rb") as file:
         encoded_string = file.read()
@@ -120,7 +128,8 @@ if __name__ == '__main__':
         num_rows=num_rows, 
         num_columns=num_columns,
         space_redutor=space_redutor,
-        font_size_regulator=font_size_regulator
+        font_size_regulator=font_size_regulator,
+        poppler_path=poppler_path
     )    
     
     with open(f'{file_name}.txt', "w") as file:
