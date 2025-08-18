@@ -46,7 +46,7 @@ This application provides a complete pipeline for extracting and formatting text
 - **Template Method**: Abstract OCR adapter defines the interface for different OCR implementations
 
 ## Class diagram
-```
+```mermaid
 classDiagram
     class PDFToTextController {
         -PdfToImageService _pdf_to_image_service
@@ -135,15 +135,111 @@ classDiagram
     OCRTextFormatterService --> AbstractOCRAdapter
     OCRTextFormatterService --> LogUtils
     OCRTextFormatterService --> ProcessObject
-
 ```
 
 ## Installation
 
 ### Prerequisites
 
-```bash
-# Install required system dependencies (Ubuntu/Debian)
-sudo apt-get install poppler-utils
+- Python 3.8+
 
-# For other systems, ensure poppler-utils is available
+### Dependencies
+
+```bash
+pip install easyocr pdf2image pandas filetype
+```
+
+### System Dependencies
+
+For PDF processing, you'll need poppler-utils:
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get install poppler-utils
+```
+
+**macOS:**
+```bash
+brew install poppler
+```
+
+**Windows:**
+Download and install poppler binaries from [poppler for Windows](https://github.com/oschwartz10612/poppler-windows/releases)
+
+## Usage
+
+### CLI
+
+```
+usage: main.py [-h] -f FILE_NAME [-c NUM_COLUMNS] [-r NUM_ROWS]
+               [-s SPACE_REDUTOR] [-z FONT_SIZE_REGULATOR] [-w MAX_WORKERS]
+               [-p POPPLER_PATH] [-l LANGUAGES] -o FILE_NAME_OUTPUT
+
+OCR Formatter options.
+
+options:
+  -h, --help            show this help message and exit
+  -f FILE_NAME, --file_name FILE_NAME
+                        Input file name
+  -c NUM_COLUMNS, --num_columns NUM_COLUMNS
+                        Number of columns of per page of the document
+                        (regulate the text position on x axis). default = 20
+  -r NUM_ROWS, --num_rows NUM_ROWS
+                        Number of rows per page of the document (regulate the
+                        text position on y axis). default = 35
+  -s SPACE_REDUTOR, --space_redutor SPACE_REDUTOR
+                        Used to smooth out the addition of tabs before each
+                        word on a line. (the higher the value, the fewer tabs
+                        will be added). default = 8
+  -z FONT_SIZE_REGULATOR, --font_size_regulator FONT_SIZE_REGULATOR
+                        Used to compensate for spacing based on the font of
+                        the text in the document. If your document contains
+                        text in a large font size, consider increasing this
+                        value so the text doesn't appear too sparse. default =
+                        6
+  -w MAX_WORKERS, --max_workers MAX_WORKERS
+                        Max of parallel page processing. This will increse the
+                        GPU usage. default = 2
+  -p POPPLER_PATH, --poppler_path POPPLER_PATH
+                        Path of installation of poppler binaries. Pass the
+                        path of the /bin folder in the folder of installation
+                        of the poppler. (Window users
+                        https://github.com/oschwartz10612/poppler-
+                        windows/releases). default = None
+  -l LANGUAGES, --languages LANGUAGES
+                        Language of document. default = ['en', 'pt']
+  -o FILE_NAME_OUTPUT, --file_name_output FILE_NAME_OUTPUT
+                        File name output
+```
+### Example CLI Usage:
+```bash
+python main.py -f docs/lorem_ipsum.PNG -r 35 -c 30 -s 6 -z 6 -w 2 -o docs/lorem_ipsum.txt
+```
+
+
+### Python
+
+```py
+from pdf_to_text import create_pdf_to_text_controller
+
+
+with open('docs/lorem_ipsum.PNG', "rb") as file:
+    document_bits = file.read()
+
+pdf_to_text_controller = create_pdf_to_text_controller(
+    languages=['pt'],
+    num_rows=35, 
+    num_columns=30,
+    space_redutor=6,
+    font_size_regulator=6,
+    max_workers=2
+)    
+
+result = pdf_to_text_controller.run(file_name=args.file_name, document_bits=document_bits)
+
+with open("docs/lorem_ipsum.txt", "w") as file:
+    file.write(result)
+```
+
+### Example of usage
+![docs/usage.png](docs/usage.png)
