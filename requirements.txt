@@ -1,5 +1,4 @@
 pandas==2.3.1
-easyocr
-matplotlib
-pdf2image
-filetype
+easyocr==1.7.2
+pdf2image==1.17.0
+filetype==1.2.0
