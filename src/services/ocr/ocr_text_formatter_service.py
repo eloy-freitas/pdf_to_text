@@ -7,6 +7,13 @@ from src.services.ocr.ocr_adapters.abstract_ocr_adapter import AbstractOCRAdapte
 
 
 class OCRTextFormatterService:
+    """
+    Service for performing OCR text extraction and formatting from images.
+    
+    This service coordinates OCR processing across multiple images and formats
+    the extracted text into a structured, readable format with proper spacing
+    and positioning.
+    """
     def __init__(
         self,
         ocr_adapter: AbstractOCRAdapter,
@@ -18,6 +25,20 @@ class OCRTextFormatterService:
         self._logger = log_utils.get_logger(__name__)
     
     def _create_dataset(self, dataset):
+        """
+        Extract text from multiple images using the configured OCR adapter.
+        
+        Args:
+            images (dict[str, dict]): Dictionary mapping image names to image data
+                                    Each value contains: {'id': int, 'image': bytes}
+                                    
+        Returns:
+            dict[str, list[dict]]: Dictionary mapping image names to extracted text data
+                                 Each text entry contains: {'text': str, 'x': float, 'y': float, 'text_size': int}
+                                 
+        Raises:
+            Exception: If OCR text extraction fails for any image
+        """
         tbl = pd.DataFrame(dataset).astype({'text': 'string'})
         if tbl.empty:
             return tbl
@@ -35,6 +56,25 @@ class OCRTextFormatterService:
         axis_source_name_range: str,
         bins: int = 15
     ) -> pd.DataFrame:
+        """
+        Format extracted text with proper positioning and spacing.
+        
+        This method organizes text elements into a grid-based layout using
+        calculated positioning to maintain the original document structure.
+        
+        Args:
+            images_with_text (dict[str, list[dict]]): Text data extracted from images
+            num_rows (int): Number of rows in the positioning grid
+            num_columns (int): Number of columns in the positioning grid  
+            space_redutor (int): Factor for reducing spacing between text elements
+            font_size_regulator (int): Factor for regulating font size calculations
+            
+        Returns:
+            str: Formatted text with proper spacing and positioning
+            
+        Raises:
+            Exception: If text formatting process fails
+        """
         dataset[axis_source_name_range] = pd.cut(dataset[axis_source_name], bins=bins)
         faixas = pd.DataFrame(
             dataset[axis_source_name_range].sort_values().drop_duplicates()

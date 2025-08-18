@@ -13,12 +13,15 @@ if __name__ == "__main__":
     parser.add_argument("-w", "--max_workers", type=int, required=False, default = 2, help="Max of parallel page processing. This will increse the GPU usage. default = 2")
     parser.add_argument("-p", "--poppler_path", type=str, required=False, default = None, help="Path of installation of poppler binaries. Pass the path of the /bin folder in the folder of installation of the poppler. (Window users https://github.com/oschwartz10612/poppler-windows/releases). default = None")
     parser.add_argument("-l", "--languages", type=list, required=False, default=['en', 'pt'], help="Language of document. default = ['en', 'pt']")
+    parser.add_argument("-g", "--gpu", type=int, required=False, default=1, help="Flag to use GPU (1) or CPU (0) in OCR")
     parser.add_argument("-o", "--file_name_output", type=str, required=True, help="File name output")
 
     args = parser.parse_args()
 
     with open(f'{args.file_name}', "rb") as file:
         document_bits = file.read()
+
+    gpu = True if args.gpu == 1 else False
     
     pdf_to_text_controller = create_pdf_to_text_controller(
         languages=args.languages,
@@ -27,7 +30,8 @@ if __name__ == "__main__":
         space_redutor=args.space_redutor,
         font_size_regulator=args.font_size_regulator,
         poppler_path=args.poppler_path,
-        max_workers=args.max_workers
+        max_workers=args.max_workers,
+        gpu=gpu
     )    
 
     result = pdf_to_text_controller.run(file_name=args.file_name, document_bits=document_bits)
