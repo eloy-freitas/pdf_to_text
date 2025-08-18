@@ -19,7 +19,7 @@ class PDFToTextController:
         self._num_columns = num_columns
         self._logger = log_utils.get_logger(__name__)
         
-    def run(self, file_name: str, document_bits: str):
+    def run(self, file_name: str, document_bits: bytes):
         try:
             process_object = ProcessObject()
             

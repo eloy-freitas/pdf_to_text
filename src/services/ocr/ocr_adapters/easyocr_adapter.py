@@ -3,9 +3,12 @@ from .abstract_ocr_adapter import AbstractOCRAdapter
 
 
 class EasyOCRAdapter(AbstractOCRAdapter):
-    def __init__(self, lenguages):
+    def __init__(self, languages: list[str], gpu: bool = False):
         super().__init__()
-        self._ocr_reader = easyocr.Reader(lenguages, gpu=True)
+        try:
+            self._ocr_reader = easyocr.Reader(languages, gpu=gpu)
+        except Exception:
+            self._ocr_reader = easyocr.Reader(languages, gpu=False)
         
     def extract_image_text(self, image):
         try:

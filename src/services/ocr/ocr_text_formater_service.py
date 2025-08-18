@@ -19,6 +19,8 @@ class OCRTextFormaterService:
     
     def create_dataset(self, dataset):
         tbl = pd.DataFrame(dataset).astype({'text': 'string'})
+        if tbl.empty:
+            return tbl
         max_y = max(tbl['y'])
 
         tbl['y'] = tbl['y'].apply(lambda y: max_y - y)
@@ -92,12 +94,17 @@ class OCRTextFormaterService:
         num_rows: int = 35, 
         num_columns: int = 20
     ) -> str:
-        dataset = self._ocr_adapter.calculate_text_position(ocr_output)
-        dataset = self.create_dataset(dataset)
-        dataset = self.map_text_positions(dataset, num_rows, num_columns)
-        text = self.format_output(dataset)
-        
-        return text
+        if not ocr_output:
+            return ''
+        try:
+            dataset = self._ocr_adapter.calculate_text_position(ocr_output)
+            
+            dataset = self.create_dataset(dataset)
+            dataset = self.map_text_positions(dataset, num_rows, num_columns)
+            text = self.format_output(dataset)
+            return text
+        except Exception as e:
+            raise Exception(f'Fail on format ocr output: \n {e}')
 
     def format_line(self, dataset: pd.DataFrame):
         line_text = []
@@ -132,7 +139,7 @@ class OCRTextFormaterService:
         self, 
         image_name: str, 
         page_id: int, 
-        image: object, 
+        image: bytes, 
         num_rows: int = 35, 
         num_columns: int = 20
     ):

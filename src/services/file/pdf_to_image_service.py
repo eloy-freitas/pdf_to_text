@@ -11,11 +11,11 @@ class PdfToImageService():
         self._accetable_image_formats = ["png", "jpg", "jpeg", "bmp", "jiff"]
         self._file_utils = file_utils
          
-    def _convert_pdf_to_images(self, file_name: str, file_type: str, document_bits: str):
+    def _convert_pdf_to_images(self, file_name: str, file_type: str, document_bits: bytes):
         try:
             input_file_path = file_name.split('/')[-1].replace('.pdf', '')
             if file_type == 'pdf':
-                data = self._file_utils.convert_pdf_from_bits(
+                data = self._file_utils.convert_pdf_from_bytes(
                     document_bits=document_bits, format='jpg'
                 )
                 
