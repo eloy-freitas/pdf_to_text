@@ -21,6 +21,34 @@ def create_pdf_to_text_controller(
     gpu: bool = True,
     poppler_path: str = None
 ):
+    """
+    Create and return a fully wired PDFToTextController.
+    
+    This factory configures and composes the necessary adapters, services, and utilities
+    to convert PDF pages to text using OCR. It instantiates logging utilities, a
+    PDF-to-image adapter (optionally using a poppler binary path), a file-type adapter,
+    an EasyOCR adapter (with optional GPU), a ThreadPoolExecutor for concurrent OCR tasks,
+    and wiring services for PDF-to-image conversion and OCR text formatting, then returns
+    the assembled PDFToTextController.
+    
+    Parameters:
+        languages (list[str] | None): OCR languages to load (defaults to ["en", "pt"]).
+        max_workers (int): Maximum worker threads for OCR concurrency (passed to ThreadPoolExecutor).
+        num_rows (int): Number of text rows used by the controller's formatter.
+        num_columns (int): Number of text columns used by the controller's formatter.
+        space_redutor (int): Space reduction parameter for the formatter.
+        font_size_regulator (int): Font-size regulation parameter for the formatter.
+        gpu (bool): Whether to enable GPU in the EasyOCR adapter.
+        poppler_path (str | None): Optional path to poppler binaries for PDF rendering.
+    
+    Returns:
+        PDFToTextController: A controller instance ready to convert PDFs to text.
+    
+    Notes:
+        - The function creates a ThreadPoolExecutor; the executor's lifecycle is managed
+          by the components that receive it. Exceptions raised during component creation
+          will propagate to the caller.
+    """
     languages = languages or ["en", "pt"]
     log_utils = LogUtils()
     pdf2image_adapter = PDF2ImageAdapter(poppler_path=poppler_path)
