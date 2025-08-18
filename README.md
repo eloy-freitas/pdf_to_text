@@ -135,7 +135,6 @@ classDiagram
     OCRTextFormatterService --> AbstractOCRAdapter
     OCRTextFormatterService --> LogUtils
     OCRTextFormatterService --> ProcessObject
-
 ```
 
 ## Installation
