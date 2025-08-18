@@ -11,12 +11,16 @@ class PDFToTextController:
         ocr_text_formater_service: OCRTextFormaterService,
         log_utils: LogUtils,
         num_rows: int = 35,
-        num_columns: int = 20
+        num_columns: int = 20,
+        space_redutor: int = 8, 
+        font_size_regulator: int = 6
     ):
         self._pdf_to_image_service = pdf_to_image_service
         self._ocr_text_formater_service = ocr_text_formater_service
         self._num_rows = num_rows
         self._num_columns = num_columns
+        self._space_redutor = space_redutor
+        self._font_size_regulator = font_size_regulator
         self._logger = log_utils.get_logger(__name__)
         
     def run(self, file_name: str, document_bits: bytes):
@@ -33,7 +37,9 @@ class PDFToTextController:
             process_object = self._ocr_text_formater_service.handle_request(
                 process_object=process_object,
                 num_rows=self._num_rows,
-                num_columns=self._num_columns
+                num_columns=self._num_columns,
+                space_redutor=self._space_redutor,
+                font_size_regulator=self._font_size_regulator
             )
             
             formated_text = process_object.get('text')

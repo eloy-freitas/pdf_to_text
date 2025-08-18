@@ -92,7 +92,9 @@ class OCRTextFormaterService:
         self,
         ocr_output: object, 
         num_rows: int = 35, 
-        num_columns: int = 20
+        num_columns: int = 20,
+        space_redutor: int = 8,
+        font_size_regulator: int = 6
     ) -> str:
         if not ocr_output:
             return ''
@@ -101,12 +103,17 @@ class OCRTextFormaterService:
             
             dataset = self.create_dataset(dataset)
             dataset = self.map_text_positions(dataset, num_rows, num_columns)
-            text = self.format_output(dataset)
+            text = self.format_output(dataset, space_redutor, font_size_regulator)
             return text
         except Exception as e:
             raise Exception(f'Fail on format ocr output: \n {e}')
 
-    def format_line(self, dataset: pd.DataFrame):
+    def format_line(
+        self, 
+        dataset: pd.DataFrame, 
+        space_redutor: int = 8, 
+        font_size_regulator: int = 6
+    ):
         line_text = []
         prev_end = 0
         
@@ -114,20 +121,25 @@ class OCRTextFormaterService:
             start_pos = row['x']
             
             if start_pos > prev_end:
-                spaces = ' ' * int((start_pos - prev_end) / 8) 
+                spaces = ' ' * int((start_pos - prev_end) / space_redutor) 
                 line_text.append(spaces)
             
             line_text.append(row['text'])
-            prev_end = start_pos + row['text_size'] * 6
+            prev_end = start_pos + row['text_size'] * font_size_regulator
         
         return ''.join(line_text)
 
-    def format_output(self, dataset: pd.DataFrame):
+    def format_output(
+        self, 
+        dataset: pd.DataFrame, 
+        space_redutor: int = 8, 
+        font_size_regulator: int = 6
+    ):
         dataset = dataset.sort_values(by=['row', 'column'],  ascending=[False, True])
         grouped = dataset.groupby('row')
         reconstructed_doc = []
         for _, group in grouped:
-            reconstructed_doc.append(self.format_line(group))
+            reconstructed_doc.append(self.format_line(group, space_redutor, font_size_regulator))
 
         reconstructed_doc.reverse()
 
@@ -141,7 +153,9 @@ class OCRTextFormaterService:
         page_id: int, 
         image: bytes, 
         num_rows: int = 35, 
-        num_columns: int = 20
+        num_columns: int = 20,
+        space_redutor: int = 8, 
+        font_size_regulator: int = 6
     ):
         self._logger.info(f'Extracting text from {image_name}')
         
@@ -150,7 +164,9 @@ class OCRTextFormaterService:
         formated_text = self.extract_formated_text_from_image(
             ocr_output=ocr_output,
             num_rows=num_rows,
-            num_columns=num_columns
+            num_columns=num_columns,
+            space_redutor=space_redutor,
+            font_size_regulator=font_size_regulator
         )
         
         return {'page_id': page_id, 'formated_text': formated_text}
@@ -159,7 +175,9 @@ class OCRTextFormaterService:
         self, 
         process_object: ProcessObject, 
         num_rows: int = 35, 
-        num_columns: int = 20
+        num_columns: int = 20,
+        space_redutor: int = 8, 
+        font_size_regulator: int = 6
     ):
         document_futures = [
             self._ocr_pool_executor.submit(
@@ -168,7 +186,9 @@ class OCRTextFormaterService:
                 meta_data['id'],
                 meta_data['image'],
                 num_rows,
-                num_columns
+                num_columns,
+                space_redutor,
+                font_size_regulator
             ) 
             for image_name, meta_data in process_object['images'].items()
         ]
