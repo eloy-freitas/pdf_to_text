@@ -36,5 +36,5 @@ if __name__ == "__main__":
 
     result = pdf_to_text_controller.run(file_name=args.file_name, document_bits=document_bits)
     
-    with open(f"{args.file_name}.txt", "w") as file:
+    with open(f"{args.file_name_output}.txt", "w") as file:
         file.write(result)
