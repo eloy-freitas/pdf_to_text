@@ -222,7 +222,7 @@ options:
 ```
 ### Example CLI Usage:
 ```bash
-python main.py -f docs/lorem_ipsum.PNG -r 35 -c 30 -s 6 -z 6 -w 2 -o docs/lorem_ipsum.txt
+python main.py -f documents/lorem_ipsum.PNG -r 35 -c 30 -s 6 -z 6 -w 2 -o documents/lorem_ipsum.txt
 ```
 
 
@@ -232,7 +232,7 @@ python main.py -f docs/lorem_ipsum.PNG -r 35 -c 30 -s 6 -z 6 -w 2 -o docs/lorem_
 from pdf_to_text import create_pdf_to_text_controller
 
 
-with open('docs/lorem_ipsum.PNG', "rb") as file:
+with open('documents/lorem_ipsum.PNG', "rb") as file:
     document_bits = file.read()
 
 pdf_to_text_controller = create_pdf_to_text_controller(
@@ -246,9 +246,9 @@ pdf_to_text_controller = create_pdf_to_text_controller(
 
 result = pdf_to_text_controller.run(file_name=args.file_name, document_bits=document_bits)
 
-with open("docs/lorem_ipsum.txt", "w") as file:
+with open("documents/lorem_ipsum.txt", "w") as file:
     file.write(result)
 ```
 
 ### Example of usage
-![docs/usage.png](docs/usage.png)
+![documents/usage.png](documents/usage.png)
