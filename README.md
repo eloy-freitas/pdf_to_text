@@ -228,7 +228,7 @@ options:
 ```
 ### Example CLI Usage:
 ```bash
-python -m pdf_to_text -f docs/lorem_ipsum.PNG -r 35 -c 30 -s 6 -z 6 -w 2 -o docs/lorem_ipsum.txt
+python -m pdf_to_text -f docs/lorem_ipsum.png -r 35 -c 30 -s 6 -z 6 -w 2 -o docs/lorem_ipsum.txt
 ```
 
 ### Python
@@ -236,9 +236,8 @@ python -m pdf_to_text -f docs/lorem_ipsum.PNG -r 35 -c 30 -s 6 -z 6 -w 2 -o docs
 ```py
 from pdf_to_text import create_pdf_to_text_controller
 
-
-with open('docs/lorem_ipsum.PNG', "rb") as file:
-    document_bits = file.read()
+file_input = 'docs/lorem_ipsum.png'
+file_output = 'docs/lorem_ipsum.txt'
 
 pdf_to_text_controller = create_pdf_to_text_controller(
     languages=['pt'],
@@ -249,9 +248,12 @@ pdf_to_text_controller = create_pdf_to_text_controller(
     max_workers=2
 )    
 
-result = pdf_to_text_controller.run(file_name=args.file_name, document_bits=document_bits)
+with open(file_input, "rb") as file:
+    document_bits = file.read()
 
-with open("docs/lorem_ipsum.txt", "w") as file:
+result = pdf_to_text_controller.run(file_name=file_input, document_bits=document_bits)
+
+with open(file_output, "w") as file:
     file.write(result)
 ```
 
