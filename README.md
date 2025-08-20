@@ -154,7 +154,11 @@ classDiagram
 ### Dependencies
 
 ```bash
-pip install easyocr pdf2image pandas filetype
+pip install easyocr pdf2image pandas filetype 
+```
+or
+```bash
+pip install -r requirements.txt --no-cache-dir
 ```
 
 ### System Dependencies
@@ -179,9 +183,10 @@ Download and install poppler binaries from [poppler for Windows](https://github.
 ### CLI
 
 ```
-usage: main.py [-h] -f FILE_NAME [-c NUM_COLUMNS] [-r NUM_ROWS]
-               [-s SPACE_REDUTOR] [-z FONT_SIZE_REGULATOR] [-w MAX_WORKERS]
-               [-p POPPLER_PATH] [-l LANGUAGES] [-g GPU] -o FILE_NAME_OUTPUT
+usage: pdf_to_text.py [-h] -f FILE_NAME [-c NUM_COLUMNS] [-r NUM_ROWS]
+                      [-s SPACE_REDUTOR] [-z FONT_SIZE_REGULATOR]
+                      [-w MAX_WORKERS] [-p POPPLER_PATH] [-l LANGUAGES]
+                      [-g GPU] -o FILE_NAME_OUTPUT
 
 OCR Formatter options.
 
@@ -215,16 +220,16 @@ options:
                         https://github.com/oschwartz10612/poppler-
                         windows/releases). default = None
   -l LANGUAGES, --languages LANGUAGES
-                        Language of document. default = ['en', 'pt']
+                        List of language of document. default = en,pt
   -g GPU, --gpu GPU     Flag to use GPU (1) or CPU (0) in OCR
   -o FILE_NAME_OUTPUT, --file_name_output FILE_NAME_OUTPUT
                         File name output
+
 ```
 ### Example CLI Usage:
 ```bash
-python main.py -f docs/lorem_ipsum.PNG -r 35 -c 30 -s 6 -z 6 -w 2 -o docs/lorem_ipsum.txt
+python -m pdf_to_text -f docs/lorem_ipsum.PNG -r 35 -c 30 -s 6 -z 6 -w 2 -o docs/lorem_ipsum.txt
 ```
-
 
 ### Python
 
@@ -250,5 +255,5 @@ with open("docs/lorem_ipsum.txt", "w") as file:
     file.write(result)
 ```
 
-### Example of usage
+### Example output
 ![docs/usage.png](docs/usage.png)
