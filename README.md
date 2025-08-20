@@ -48,6 +48,7 @@ This application provides a complete pipeline for extracting and formatting text
 ## Class diagram
 ```mermaid
 classDiagram
+    %% Controller Layer
     class PDFToTextController {
         -PdfToImageService _pdf_to_image_service
         -OCRTextFormatterService _ocr_text_formatter_service
@@ -60,18 +61,20 @@ classDiagram
         +run(file_name: str, document_bits: bytes) str
     }
 
+    %% Model Layer
     class ProcessObject {
         +__init__()
     }
 
+    %% Service Layer
     class PdfToImageService {
-        -list _acceptable_image_formats
+        -list[str] _accetable_image_formats
         -FIletypeAdapter _filetype_adapter
         -PDF2ImageAdapter _pdf2image_adapter
         +__init__(filetype_adapter, pdf2image_adapter)
-        -_convert_pdf_to_images(file_name: str, file_type: str, document_bits: bytes) dict
-        -_pil_to_binary(image: Image) bytes
-        +handle_request(process_object: ProcessObject) dict
+        -_convert_pdf_to_images(file_name: str, file_type: str, document_bits: bytes) dict[str, bytes]
+        -_pil_to_binary(images: list[Image], format: str) dict[str, dict]
+        +handle_request(process_object: ProcessObject) ProcessObject
     }
 
     class OCRTextFormatterService {
@@ -79,33 +82,38 @@ classDiagram
         -ThreadPoolExecutor _ocr_pool_executor
         -Logger _logger
         +__init__(ocr_adapter, ocr_pool_executor, log_utils)
-        -_create_dataset(dataset) DataFrame
-        -_calculate_axis_frequency(dataset, axis_source_name, axis_target_name, axis_source_name_range, bins) DataFrame
-        -_map_text_positions(dataset, num_rows, num_columns) DataFrame
-        -_extract_formated_text_from_image(ocr_output, num_rows, num_columns, space_redutor, font_size_regulator) str
-        -_format_line(dataset, space_redutor, font_size_regulator) str
-        -_format_output(dataset, space_redutor, font_size_regulator) str
-        -_process_document_text(image_name, page_id, image, num_rows, num_columns, space_redutor, font_size_regulator) dict
-        +handle_request(process_object, num_rows, num_columns, space_redutor, font_size_regulator) ProcessObject
+        -_create_pandas_dataset(dataset: list[dict]) pd.DataFrame
+        -_create_axis_classes(dataset: pd.DataFrame, axis_source_name: str, axis_target_name: str, axis_classes_name: str, num_classes: int) pd.DataFrame
+        -_calculate_axis(dataset: pd.DataFrame, source_name: str, target_name: str, class_name: str, num_classes: int) pd.DataFrame
+        -_map_text_positions(dataset: pd.DataFrame, num_rows: int, num_columns: int) pd.DataFrame
+        -_extract_formated_text_from_image(ocr_output: object, num_rows: int, num_columns: int, space_redutor: int, font_size_regulator: int) str
+        -_format_line(dataset: pd.DataFrame, space_redutor: int, font_size_regulator: int) str
+        -_format_output(dataset: pd.DataFrame, space_redutor: int, font_size_regulator: int) str
+        -_process_document_text(image_name: str, page_id: int, image: bytes, num_rows: int, num_columns: int, space_redutor: int, font_size_regulator: int) dict
+        +handle_request(process_object: ProcessObject, num_rows: int, num_columns: int, space_redutor: int, font_size_regulator: int) ProcessObject
     }
 
+    %% OCR Adapters
     class AbstractOCRAdapter {
         <<abstract>>
-        #_ocr_reader
+        #object _ocr_reader
         +__init__()
-        +extract_image_text(image: bytes)* object
-        +calculate_text_position(ocr_output: object)* list[dict]
+        +read_text_from_image(image: bytes)* object
+        +create_ocr_metadata(ocr_output: object)* list[dict]
     }
 
     class EasyOCRAdapter {
         +__init__(languages: list[str], gpu: bool)
-        +extract_image_text(image) object
-        +calculate_text_position(ocr_output: object) list[dict]
+        +read_text_from_image(image: bytes) list
+        +create_ocr_metadata(ocr_output: list) list[dict]
+        -get_x_axis(bounding_box: list) float
+        -get_y_axis(bounding_box: list) float
     }
 
+    %% Utility Classes
     class LogUtils {
         +__init__()
-        +get_logger(name) Logger
+        +get_logger(name: str) Logger
     }
 
     class FIletypeAdapter {
@@ -115,26 +123,26 @@ classDiagram
     class PDF2ImageAdapter {
         -str _poppler_path
         +__init__(poppler_path: str)
-        +convert_pdf_from_bytes(document_bits: bytes, format: str) list
+        +convert_pdf_from_bytes(document_bits: bytes, format: str) list[Image.Image]
     }
 
-    %% Inheritance
-    ProcessObject --|> dict
-    EasyOCRAdapter --|> AbstractOCRAdapter
+    %% Relationships
+    PDFToTextController --> PdfToImageService : uses
+    PDFToTextController --> OCRTextFormatterService : uses
+    PDFToTextController --> LogUtils : uses
+    PDFToTextController --> ProcessObject : processes
 
-    %% Dependencies
-    PDFToTextController --> PdfToImageService
-    PDFToTextController --> OCRTextFormatterService
-    PDFToTextController --> LogUtils
-    PDFToTextController --> ProcessObject
+    PdfToImageService --> FIletypeAdapter : uses
+    PdfToImageService --> PDF2ImageAdapter : uses
+    PdfToImageService --> ProcessObject : modifies
 
-    PdfToImageService --> FIletypeAdapter
-    PdfToImageService --> PDF2ImageAdapter
-    PdfToImageService --> ProcessObject
+    OCRTextFormatterService --> AbstractOCRAdapter : uses
+    OCRTextFormatterService --> LogUtils : uses
+    OCRTextFormatterService --> ProcessObject : processes
 
-    OCRTextFormatterService --> AbstractOCRAdapter
-    OCRTextFormatterService --> LogUtils
-    OCRTextFormatterService --> ProcessObject
+    EasyOCRAdapter --|> AbstractOCRAdapter : implements
+
+    ProcessObject --|> dict : extends
 ```
 
 ## Installation
@@ -171,7 +179,9 @@ Download and install poppler binaries from [poppler for Windows](https://github.
 ### CLI
 
 ```
-usage: main.py [-h] -f FILE_NAME [-c NUM_COLUMNS] [-r NUM_ROWS] [-s SPACE_REDUTOR] [-z FONT_SIZE_REGULATOR] [-w MAX_WORKERS] [-p POPPLER_PATH] [-l LANGUAGES] [-g GPU] -o FILE_NAME_OUTPUT
+usage: main.py [-h] -f FILE_NAME [-c NUM_COLUMNS] [-r NUM_ROWS]
+               [-s SPACE_REDUTOR] [-z FONT_SIZE_REGULATOR] [-w MAX_WORKERS]
+               [-p POPPLER_PATH] [-l LANGUAGES] [-g GPU] -o FILE_NAME_OUTPUT
 
 OCR Formatter options.
 
@@ -180,17 +190,30 @@ options:
   -f FILE_NAME, --file_name FILE_NAME
                         Input file name
   -c NUM_COLUMNS, --num_columns NUM_COLUMNS
-                        Number of columns of per page of the document (regulate the text position on x axis). default = 20
+                        Number of columns of per page of the document
+                        (regulate the text position on x axis). default = 20
   -r NUM_ROWS, --num_rows NUM_ROWS
-                        Number of rows per page of the document (regulate the text position on y axis). default = 35
+                        Number of rows per page of the document (regulate the
+                        text position on y axis). default = 35
   -s SPACE_REDUTOR, --space_redutor SPACE_REDUTOR
-                        Used to smooth out the addition of tabs before each word on a line. (the higher the value, the fewer tabs will be added). default = 8
+                        Used to smooth out the addition of tabs before each
+                        word on a line. (the higher the value, the fewer tabs
+                        will be added). default = 8
   -z FONT_SIZE_REGULATOR, --font_size_regulator FONT_SIZE_REGULATOR
-                        Used to compensate for spacing based on the font of the text in the document. If your document contains text in a large font size, consider increasing this value so the text doesn't appear too sparse. default = 6
+                        Used to compensate for spacing based on the font of
+                        the text in the document. If your document contains
+                        text in a large font size, consider increasing this
+                        value so the text doesn't appear too sparse. default =
+                        6
   -w MAX_WORKERS, --max_workers MAX_WORKERS
-                        Max of parallel page processing. This will increse the GPU usage. default = 2
+                        Max of parallel page processing. This will increse the
+                        GPU usage. default = 2
   -p POPPLER_PATH, --poppler_path POPPLER_PATH
-                        Path of installation of poppler binaries. Pass the path of the /bin folder in the folder of installation of the poppler. (Window users https://github.com/oschwartz10612/poppler-windows/releases). default = None
+                        Path of installation of poppler binaries. Pass the
+                        path of the /bin folder in the folder of installation
+                        of the poppler. (Windows users
+                        https://github.com/oschwartz10612/poppler-
+                        windows/releases). default = None
   -l LANGUAGES, --languages LANGUAGES
                         Language of document. default = ['en', 'pt']
   -g GPU, --gpu GPU     Flag to use GPU (1) or CPU (0) in OCR

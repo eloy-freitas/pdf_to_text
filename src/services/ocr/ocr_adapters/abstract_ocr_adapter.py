@@ -19,7 +19,7 @@ class AbstractOCRAdapter(ABC):
         self._ocr_reader = None
         
     @abstractmethod
-    def extract_image_text(self, image: bytes) -> object:
+    def read_text_from_image(self, image: bytes) -> object:
         """
         Extract text from an image using OCR technology.
         
@@ -32,7 +32,7 @@ class AbstractOCRAdapter(ABC):
         ...
     
     @abstractmethod
-    def calculate_text_position(self, ocr_output: object) -> list[dict]:
+    def create_ocr_metadata(self, ocr_output: object) -> list[dict]:
         """
         Calculate and normalize text positions from OCR output.
         
@@ -41,6 +41,6 @@ class AbstractOCRAdapter(ABC):
             
         Returns:
             list[dict]: List of dictionaries containing text and position information
-                       Each dict should contain: {'text': str, 'x': float, 'y': float, 'text_size': int}
+                       Each dict should contain: {'text': str, 'x': float, 'y': float, 'text_length': int}
         """
         ...

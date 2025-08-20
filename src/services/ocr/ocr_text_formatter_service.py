@@ -24,7 +24,7 @@ class OCRTextFormatterService:
         self._ocr_pool_executor = ocr_pool_executor
         self._logger = log_utils.get_logger(__name__)
     
-    def _create_dataset(self, dataset):
+    def _create_pandas_dataset(self, dataset: list[dict]) -> pd.DataFrame:
         """
         Extract text from multiple images using the configured OCR adapter.
         
@@ -34,27 +34,28 @@ class OCRTextFormatterService:
                                     
         Returns:
             dict[str, list[dict]]: Dictionary mapping image names to extracted text data
-                                 Each text entry contains: {'text': str, 'x': float, 'y': float, 'text_size': int}
+                                 Each text entry contains: {'text': str, 'x': float, 'y': float, 'text_length': int}
                                  
         Raises:
             Exception: If OCR text extraction fails for any image
         """
-        tbl = pd.DataFrame(dataset).astype({'text': 'string'})
-        if tbl.empty:
-            return tbl
-        max_y = max(tbl['y'])
+        df_dataset = pd.DataFrame(dataset)
+        if df_dataset.empty:
+            return df_dataset
+        df_dataset.astype({'text': 'string'})
+        max_y = max(df_dataset['y'])
 
-        tbl['y'] = tbl['y'].apply(lambda y: max_y - y)
+        df_dataset['y'] = df_dataset['y'].apply(lambda y: max_y - y)
         
-        return tbl
+        return df_dataset
 
-    def _calculate_axis_frequency(
+    def _create_axis_classes(
         self,
         dataset: pd.DataFrame, 
         axis_source_name: str, 
         axis_target_name: str, 
-        axis_source_name_range: str,
-        bins: int = 15
+        axis_classes_name: str,
+        num_classes: int = 15
     ) -> pd.DataFrame:
         """
         Format extracted text with proper positioning and spacing.
@@ -68,21 +69,68 @@ class OCRTextFormatterService:
             num_columns (int): Number of columns in the positioning grid  
             space_redutor (int): Factor for reducing spacing between text elements
             font_size_regulator (int): Factor for regulating font size calculations
-            
+            num_classes (int): Number of classes to create for axis normalization
         Returns:
             str: Formatted text with proper spacing and positioning
             
         Raises:
             Exception: If text formatting process fails
         """
-        dataset[axis_source_name_range] = pd.cut(dataset[axis_source_name], bins=bins)
-        faixas = pd.DataFrame(
-            dataset[axis_source_name_range].sort_values().drop_duplicates()
+        dataset[axis_classes_name] = pd.cut(
+            dataset[axis_source_name], 
+            bins=num_classes
         )
 
-        faixas[axis_target_name] = range(0, len(faixas))
+        classes = pd.DataFrame(
+            dataset[axis_classes_name]
+            .sort_values()
+            .drop_duplicates()
+        )
+
+        classes[axis_target_name] = range(0, len(classes))
         
-        return faixas
+        return classes
+    
+    def _calculate_axis(
+        self,
+        dataset: pd.DataFrame,
+        source_name: str,
+        target_name: str,
+        class_name: str,
+        num_classes: int = 15
+    ):
+        """
+        Calculate axis positioning for text elements in the dataset.
+        
+        Creates axis classes and merges them with the dataset to establish
+        normalized positioning coordinates for text elements.
+        
+        Args:
+            dataset (pd.DataFrame): Input dataset with text positioning data
+            source_name (str): Name of the source coordinate column
+            target_name (str): Name of the target normalized coordinate column
+            class_name (str): Name of the class categorization column
+            num_classes (int, optional): Number of classes for axis normalization. Defaults to 15.
+            
+        Returns:
+            pd.DataFrame: Dataset with calculated axis positions merged
+        """
+        classes = self._create_axis_classes(
+            dataset=dataset, 
+            axis_source_name=source_name, 
+            axis_target_name=target_name, 
+            axis_classes_name=class_name,
+            num_classes=num_classes
+        )
+
+        merge = pd.merge(
+            left=dataset, 
+            right=classes, 
+            on=[class_name], 
+            how='left'
+        )
+
+        return merge
 
     def _map_text_positions(
         self, 
@@ -90,43 +138,45 @@ class OCRTextFormatterService:
         num_rows: int=80,
         num_columns: int=40
     ) -> pd.DataFrame:
+        """
+        Map text elements to a grid-based coordinate system.
+        
+        Converts continuous x,y coordinates to discrete row and column positions
+        to facilitate proper text layout reconstruction.
+        
+        Args:
+            dataset (pd.DataFrame): Dataset with text and coordinate information
+            num_rows (int, optional): Number of rows in the grid system. Defaults to 80.
+            num_columns (int, optional): Number of columns in the grid system. Defaults to 40.
+            
+        Returns:
+            pd.DataFrame: Dataset with added 'row' and 'column' positioning information
+        """
         row_source_name = 'y'
         row_target_name = 'row'
-        column_source_name = 'x'
-        column_target_name = 'column'
-        row_source_name_range = f'range_{row_source_name}'
-        column_source_name_range = f'range_{column_source_name}'
-        
-        rows = self._calculate_axis_frequency(
+        row_source_name_range = f'classes_{row_source_name}'
+
+        rows = self._calculate_axis(
             dataset=dataset, 
-            axis_source_name=row_source_name, 
-            axis_target_name=row_target_name, 
-            axis_source_name_range=row_source_name_range,
-            bins=num_rows
-        )
-        
-        columns = self._calculate_axis_frequency(
-            dataset=dataset, 
-            axis_source_name=column_source_name, 
-            axis_target_name=column_target_name,
-            axis_source_name_range=column_source_name_range,
-            bins=num_columns
+            source_name=row_source_name, 
+            target_name=row_target_name, 
+            class_name=row_source_name_range,
+            num_classes=num_rows
         )
 
-        merge = pd.merge(
-            left=dataset, 
-            right=rows, 
-            on=[row_source_name_range], 
-            how='left'
-        )
-        merge = pd.merge(
-            left=merge, 
-            right=columns, 
-            on=[column_source_name_range], 
-            how='left'
-        )
+        column_source_name = 'x'
+        column_target_name = 'column'
+        column_source_name_range = f'classes_{column_source_name}'
         
-        return merge
+        columns = self._calculate_axis(
+            dataset=rows, 
+            source_name=column_source_name, 
+            target_name=column_target_name,
+            class_name=column_source_name_range,
+            num_classes=num_columns
+        )
+
+        return columns
 
     def _extract_formated_text_from_image(
         self,
@@ -136,12 +186,31 @@ class OCRTextFormatterService:
         space_redutor: int = 8,
         font_size_regulator: int = 6
     ) -> str:
+        """
+        Extract and format text from OCR output with proper positioning.
+        
+        Processes raw OCR output through the complete text formatting pipeline
+        to produce structured, readable text with preserved layout.
+        
+        Args:
+            ocr_output (object): Raw OCR output from the OCR adapter
+            num_rows (int, optional): Number of rows for grid positioning. Defaults to 35.
+            num_columns (int, optional): Number of columns for grid positioning. Defaults to 20.
+            space_redutor (int, optional): Factor for reducing spacing between elements. Defaults to 8.
+            font_size_regulator (int, optional): Factor for font size calculations. Defaults to 6.
+            
+        Returns:
+            str: Formatted text with preserved layout and proper spacing
+            
+        Raises:
+            Exception: If text formatting process fails
+        """
         if not ocr_output:
             return ''
         try:
-            dataset = self._ocr_adapter.calculate_text_position(ocr_output)
+            dataset = self._ocr_adapter.create_ocr_metadata(ocr_output)
             
-            dataset = self._create_dataset(dataset)
+            dataset = self._create_pandas_dataset(dataset)
             dataset = self._map_text_positions(dataset, num_rows, num_columns)
             text = self._format_output(dataset, space_redutor, font_size_regulator)
             return text
@@ -154,6 +223,20 @@ class OCRTextFormatterService:
         space_redutor: int = 8, 
         font_size_regulator: int = 6
     ):
+        """
+        Format a single line of text with appropriate spacing.
+        
+        Reconstructs text line spacing based on calculated positions and text lengths
+        to maintain the original document layout.
+        
+        Args:
+            dataset (pd.DataFrame): Dataset containing text elements for a single line
+            space_redutor (int, optional): Factor for calculating spaces between text elements. Defaults to 8.
+            font_size_regulator (int, optional): Factor for calculating text element widths. Defaults to 6.
+            
+        Returns:
+            str: Formatted line with appropriate spacing between text elements
+        """
         line_text = []
         prev_end = 0
         
@@ -165,7 +248,7 @@ class OCRTextFormatterService:
                 line_text.append(spaces)
             
             line_text.append(row['text'])
-            prev_end = start_pos + row['text_size'] * font_size_regulator
+            prev_end = start_pos + row['text_length'] * font_size_regulator
         
         return ''.join(line_text)
 
@@ -175,6 +258,20 @@ class OCRTextFormatterService:
         space_redutor: int = 8, 
         font_size_regulator: int = 6
     ):
+        """
+        Format the complete document output from processed text data.
+        
+        Assembles all text elements into a complete document with proper line ordering
+        and formatting to recreate the original document structure.
+        
+        Args:
+            dataset (pd.DataFrame): Complete dataset with positioned text elements
+            space_redutor (int, optional): Factor for calculating horizontal spacing. Defaults to 8.
+            font_size_regulator (int, optional): Factor for text width calculations. Defaults to 6.
+            
+        Returns:
+            str: Complete formatted document text with preserved layout
+        """
         dataset = dataset.sort_values(by=['row', 'column'],  ascending=[False, True])
         grouped = dataset.groupby('row')
         reconstructed_doc = []
@@ -197,9 +294,27 @@ class OCRTextFormatterService:
         space_redutor: int = 8, 
         font_size_regulator: int = 6
     ):
+        """
+        Process a single document page/image for text extraction.
+
+        Handles the complete OCR and formatting pipeline for a single image,
+        including logging and error handling.
+
+        Args:
+            image_name (str): Name identifier for the image being processed
+            page_id (int): Sequential page number for ordering
+            image (bytes): Binary image data to process
+            num_rows (int, optional): Grid rows for positioning. Defaults to 35.
+            num_columns (int, optional): Grid columns for positioning. Defaults to 20.
+            space_redutor (int, optional): Spacing calculation factor. Defaults to 8.
+            font_size_regulator (int, optional): Font size calculation factor. Defaults to 6.
+            
+        Returns:
+            dict: Dictionary containing 'page_id' and 'formated_text' keys
+        """
         self._logger.info(f'Extracting text from {image_name}')
         
-        ocr_output = self._ocr_adapter.extract_image_text(image)
+        ocr_output = self._ocr_adapter.read_text_from_image(image)
         
         formated_text = self._extract_formated_text_from_image(
             ocr_output=ocr_output,
@@ -219,6 +334,22 @@ class OCRTextFormatterService:
         space_redutor: int = 8, 
         font_size_regulator: int = 6
     ):
+        """
+        Handle the complete OCR text formatting request for multiple images.
+        
+        Processes all images in the ProcessObject concurrently using the thread pool,
+        formats the extracted text, and assembles the final document.
+        
+        Args:
+            process_object (ProcessObject): Container with images and metadata
+            num_rows (int, optional): Grid rows for text positioning. Defaults to 35.
+            num_columns (int, optional): Grid columns for text positioning. Defaults to 20.
+            space_redutor (int, optional): Factor for horizontal spacing calculations. Defaults to 8.
+            font_size_regulator (int, optional): Factor for font size calculations. Defaults to 6.
+            
+        Returns:
+            ProcessObject: Updated ProcessObject with extracted text and cleaned up data
+        """
         document_futures = [
             self._ocr_pool_executor.submit(
                 self._process_document_text, 
