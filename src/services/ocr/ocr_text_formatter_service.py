@@ -98,7 +98,7 @@ class OCRTextFormatterService:
         target_name: str,
         class_name: str,
         num_classes: int = 15
-    ):
+    ) -> pd.DataFrame:
         """
         Calculate axis positioning for text elements in the dataset.
         
@@ -222,7 +222,7 @@ class OCRTextFormatterService:
         dataset: pd.DataFrame, 
         space_redutor: int = 8, 
         font_size_regulator: int = 6
-    ):
+    ) -> str:
         """
         Format a single line of text with appropriate spacing.
         
@@ -257,7 +257,7 @@ class OCRTextFormatterService:
         dataset: pd.DataFrame, 
         space_redutor: int = 8, 
         font_size_regulator: int = 6
-    ):
+    ) -> str:
         """
         Format the complete document output from processed text data.
         
@@ -293,7 +293,7 @@ class OCRTextFormatterService:
         num_columns: int = 20,
         space_redutor: int = 8, 
         font_size_regulator: int = 6
-    ):
+    ) -> dict:
         """
         Process a single document page/image for text extraction.
 
@@ -333,7 +333,7 @@ class OCRTextFormatterService:
         num_columns: int = 20,
         space_redutor: int = 8, 
         font_size_regulator: int = 6
-    ):
+    ) -> ProcessObject:
         """
         Handle the complete OCR text formatting request for multiple images.
         
