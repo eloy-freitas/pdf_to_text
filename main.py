@@ -11,7 +11,7 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--space_redutor", type=int, required=False, default = 8, help="Used to smooth out the addition of tabs before each word on a line. (the higher the value, the fewer tabs will be added). default = 8")
     parser.add_argument("-z", "--font_size_regulator", type=int, required=False, default = 6, help="Used to compensate for spacing based on the font of the text in the document. If your document contains text in a large font size, consider increasing this value so the text doesn't appear too sparse. default = 6")
     parser.add_argument("-w", "--max_workers", type=int, required=False, default = 2, help="Max of parallel page processing. This will increse the GPU usage. default = 2")
-    parser.add_argument("-p", "--poppler_path", type=str, required=False, default = None, help="Path of installation of poppler binaries. Pass the path of the /bin folder in the folder of installation of the poppler. (Window users https://github.com/oschwartz10612/poppler-windows/releases). default = None")
+    parser.add_argument("-p", "--poppler_path", type=str, required=False, default = None, help="Path of installation of poppler binaries. Pass the path of the /bin folder in the folder of installation of the poppler. (Windows users https://github.com/oschwartz10612/poppler-windows/releases). default = None")
     parser.add_argument("-l", "--languages", type=list, required=False, default=['en', 'pt'], help="Language of document. default = ['en', 'pt']")
     parser.add_argument("-g", "--gpu", type=int, required=False, default=1, help="Flag to use GPU (1) or CPU (0) in OCR")
     parser.add_argument("-o", "--file_name_output", type=str, required=True, help="File name output")
