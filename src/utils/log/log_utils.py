@@ -17,7 +17,7 @@ class LogUtils:
     def __init__(self):
         pass
 
-    def get_logger(self, name) -> Logger:
+    def get_logger(self, name: str) -> Logger:
         """
         Return a logger instance associated with the specified name.
         

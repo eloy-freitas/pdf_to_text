@@ -1,7 +1,9 @@
 import argparse
 from pdf_to_text import create_pdf_to_text_controller
+from src.utils.log.log_utils import LogUtils
 
 if __name__ == "__main__":
+    logger = LogUtils().get_logger(__name__)
 
     parser = argparse.ArgumentParser(description="OCR Formatter options.")
 
@@ -12,19 +14,31 @@ if __name__ == "__main__":
     parser.add_argument("-z", "--font_size_regulator", type=int, required=False, default = 6, help="Used to compensate for spacing based on the font of the text in the document. If your document contains text in a large font size, consider increasing this value so the text doesn't appear too sparse. default = 6")
     parser.add_argument("-w", "--max_workers", type=int, required=False, default = 2, help="Max of parallel page processing. This will increse the GPU usage. default = 2")
     parser.add_argument("-p", "--poppler_path", type=str, required=False, default = None, help="Path of installation of poppler binaries. Pass the path of the /bin folder in the folder of installation of the poppler. (Windows users https://github.com/oschwartz10612/poppler-windows/releases). default = None")
-    parser.add_argument("-l", "--languages", type=list, required=False, default=['en', 'pt'], help="Language of document. default = ['en', 'pt']")
+    parser.add_argument("-l", "--languages", type=str, required=False, default='en,pt', help="List of language of document. default = en,pt")
     parser.add_argument("-g", "--gpu", type=int, required=False, default=1, help="Flag to use GPU (1) or CPU (0) in OCR")
     parser.add_argument("-o", "--file_name_output", type=str, required=True, help="File name output")
 
     args = parser.parse_args()
 
+    logger.info(f'file_name = {args.file_name}')
+    logger.info(f'num_columns = {args.num_columns}')
+    logger.info(f'num_rows = {args.num_rows}')
+    logger.info(f'space_redutor = {args.space_redutor}')
+    logger.info(f'font_size_regulator = {args.font_size_regulator}')
+    logger.info(f'max_workers = {args.max_workers}')
+    logger.info(f'poppler_path = {args.poppler_path}')
+    logger.info(f'languages = {args.languages}')
+    logger.info(f'gpu = {args.gpu}')
+    logger.info(f'file_name_output = {args.file_name_output}')
+
     with open(f'{args.file_name}', "rb") as file:
         document_bits = file.read()
 
     gpu = True if args.gpu == 1 else False
-    
+    languages = args.languages.split(',') if args.languages else ['en', 'pt']
+
     pdf_to_text_controller = create_pdf_to_text_controller(
-        languages=args.languages,
+        languages=languages,
         num_rows=args.num_rows, 
         num_columns=args.num_columns,
         space_redutor=args.space_redutor,
