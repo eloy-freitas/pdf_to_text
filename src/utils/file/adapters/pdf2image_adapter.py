@@ -58,5 +58,8 @@ class PDF2ImageAdapter:
                 fmt=format, 
                 poppler_path=self._poppler_path
             )
+        except IndexError as e:
+            raise Exception(f'Invalid page index in pages_to_include: {e}')
         except Exception as e:
             raise Exception(f'Fail to convert PDF to Images: {e}')
+        
