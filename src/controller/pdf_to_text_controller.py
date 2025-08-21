@@ -42,7 +42,7 @@ class PDFToTextController:
         self._font_size_regulator = font_size_regulator
         self._logger = log_utils.get_logger(__name__)
         
-    def run(self, file_name: str, document_bits: bytes) -> str:
+    def run(self, file_name: str, document_bits: bytes, pages_to_include: list[int] = None) -> str:
         """
         Execute the complete PDF to text conversion process.
         
@@ -62,6 +62,7 @@ class PDFToTextController:
             
             process_object['file_name'] = file_name
             process_object['document_bits'] = document_bits
+            process_object['pages_to_include'] = pages_to_include
             
             process_object = self._pdf_to_image_service.handle_request(
                 process_object=process_object

@@ -102,6 +102,7 @@ def main():
     parser.add_argument("-w", "--max_workers", type=int, required=False, default = 2, help="Max of parallel page processing. This will increse the GPU usage. default = 2")
     parser.add_argument("-p", "--poppler_path", type=str, required=False, default = None, help="Path of installation of poppler binaries. Pass the path of the /bin folder in the folder of installation of the poppler. (Windows users https://github.com/oschwartz10612/poppler-windows/releases). default = None")
     parser.add_argument("-l", "--languages", type=str, required=False, default='en,pt', help="List of language of document. default = en,pt")
+    parser.add_argument("-n", "--pages_to_include", type=str, required=False, default=None, help="List of pages to extract from PDF. default = None")
     parser.add_argument("-g", "--gpu", type=int, required=False, default=1, help="Flag to use GPU (1) or CPU (0) in OCR")
     parser.add_argument("-o", "--file_name_output", type=str, required=True, help="File name output")
 
@@ -115,6 +116,7 @@ def main():
     logger.info(f'max_workers = {args.max_workers}')
     logger.info(f'poppler_path = {args.poppler_path}')
     logger.info(f'languages = {args.languages}')
+    logger.info(f'pages_to_include = {args.pages_to_include}')
     logger.info(f'gpu = {args.gpu}')
     logger.info(f'file_name_output = {args.file_name_output}')
 
@@ -127,6 +129,11 @@ def main():
 
     gpu = True if args.gpu == 1 else False
     languages = args.languages.split(',') if args.languages else ['en', 'pt']
+    pages_to_include = args.pages_to_include.split(',') if args.pages_to_include else None
+    pages_to_include = [int(page) for page in pages_to_include] if pages_to_include else None
+
+    if pages_to_include:
+        pages_to_include.sort()
 
     pdf_to_text_controller = create_pdf_to_text_controller(
         languages=languages,
@@ -139,7 +146,11 @@ def main():
         gpu=gpu
     )    
 
-    result = pdf_to_text_controller.run(file_name=args.file_name, document_bits=document_bits)
+    result = pdf_to_text_controller.run(
+        file_name=args.file_name, 
+        document_bits=document_bits,
+        pages_to_include=pages_to_include
+    )
     
     try:
         with open(f"{args.file_name_output}", "w") as file:

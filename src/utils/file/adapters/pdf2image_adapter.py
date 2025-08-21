@@ -15,7 +15,12 @@ class PDF2ImageAdapter:
     ):
         self._poppler_path = poppler_path
 
-    def convert_pdf_from_bytes(self, document_bits: bytes, format: str = 'jpg') -> list[Image.Image]:
+    def convert_pdf_from_bytes(
+        self, 
+        document_bits: bytes, 
+        format: str = 'jpg',
+        pages_to_include: list[int] = None
+    ) -> list[Image.Image]:
         """
         Convert PDF document from bytes to a list of PIL Image objects.
         
@@ -36,6 +41,18 @@ class PDF2ImageAdapter:
                       memory issues, or unsupported format
         """
         try:
+            if pages_to_include:
+                images = []
+                for page in pages_to_include:
+                    image = pdf.convert_from_bytes(
+                        document_bits, 
+                        fmt=format, 
+                        poppler_path=self._poppler_path,
+                        first_page=page,
+                        last_page=page
+                    )
+                    images.append(image[0])
+                return images
             return pdf.convert_from_bytes(
                 document_bits, 
                 fmt=format, 
