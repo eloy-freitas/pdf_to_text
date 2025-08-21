@@ -49,6 +49,8 @@ class PDFToTextController:
         Args:
             file_name (str): Name of the PDF file being processed
             document_bits (bytes): Binary content of the PDF document
+            pages_to_include (list[int], optional): List of page numbers to convert.
+                                                   If None, all pages are converted.
             
         Returns:
             str: Formatted text extracted from the PDF document

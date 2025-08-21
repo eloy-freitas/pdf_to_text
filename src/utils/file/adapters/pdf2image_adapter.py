@@ -31,6 +31,9 @@ class PDF2ImageAdapter:
             document_bits (bytes): Binary content of the PDF document
             format (str, optional): Output image format. Defaults to 'jpg'.
                                   Supported formats: 'jpg', 'png', 'bmp', etc.
+            pages_to_include (list[int], optional): List of page numbers to convert.
+                                                   If None, all pages are converted.
+                                                   Defaults to None.
                                   
         Returns:
             list[Image.Image]: List of PIL Image objects, one for each PDF page

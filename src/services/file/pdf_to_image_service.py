@@ -43,6 +43,8 @@ class PdfToImageService:
             file_name (str): Name of the input file
             file_type (str): Detected file type extension
             document_bits (bytes): Binary content of the document
+            pages_to_include (list[int], optional): List of page numbers to convert.
+                                                   If None, all pages are converted.
             
         Returns:
             dict[str, bytes]: Dictionary mapping image names to their binary data and metadata
