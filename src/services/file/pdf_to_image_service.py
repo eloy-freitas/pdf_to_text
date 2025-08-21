@@ -34,6 +34,7 @@ class PdfToImageService:
         file_name: str, 
         file_type: str, 
         document_bits: bytes,
+        pages_to_include: list[int] = None
     ) -> dict[str, bytes]:
         """
         Convert PDF document or validate image format and prepare for OCR processing.
@@ -42,6 +43,8 @@ class PdfToImageService:
             file_name (str): Name of the input file
             file_type (str): Detected file type extension
             document_bits (bytes): Binary content of the document
+            pages_to_include (list[int], optional): List of page numbers to convert.
+                                                   If None, all pages are converted.
             
         Returns:
             dict[str, bytes]: Dictionary mapping image names to their binary data and metadata
@@ -53,7 +56,7 @@ class PdfToImageService:
             input_file_path = file_name.split('/')[-1].replace('.pdf', '')
             if file_type == 'pdf':
                 data = self._pdf2image_adapter.convert_pdf_from_bytes(
-                    document_bits=document_bits, format='jpg'
+                    document_bits=document_bits, format='jpg', pages_to_include=pages_to_include
                 )
                 
                 images = {
@@ -112,13 +115,15 @@ class PdfToImageService:
         try:
             file_name = process_object.get('file_name')
             document_bits = process_object.get('document_bits')
+            pages_to_include = process_object.get('pages_to_include')
             
             file_type = self._filetype_adapter.get_filetype(document_bits)
             
             images = self._convert_pdf_to_images(
                 file_name=file_name,
                 file_type=file_type,
-                document_bits=document_bits
+                document_bits=document_bits,
+                pages_to_include=pages_to_include
             )
             
             process_object['images'] = images

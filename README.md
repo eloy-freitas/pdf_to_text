@@ -58,7 +58,7 @@ classDiagram
         -int _font_size_regulator
         -Logger _logger
         +__init__(pdf_to_image_service, ocr_text_formatter_service, log_utils, num_rows, num_columns, space_redutor, font_size_regulator)
-        +run(file_name: str, document_bits: bytes) str
+        +run(file_name: str, document_bits: bytes, pages_to_include: list[int]) str
     }
 
     %% Model Layer
@@ -72,7 +72,7 @@ classDiagram
         -FIletypeAdapter _filetype_adapter
         -PDF2ImageAdapter _pdf2image_adapter
         +__init__(filetype_adapter, pdf2image_adapter)
-        -_convert_pdf_to_images(file_name: str, file_type: str, document_bits: bytes) dict[str, bytes]
+        -_convert_pdf_to_images(file_name: str, file_type: str, document_bits: bytes, pages_to_include: list[int]) dict[str, bytes]
         -_pil_to_binary(images: list[Image], format: str) dict[str, dict]
         +handle_request(process_object: ProcessObject) ProcessObject
     }
@@ -123,7 +123,7 @@ classDiagram
     class PDF2ImageAdapter {
         -str _poppler_path
         +__init__(poppler_path: str)
-        +convert_pdf_from_bytes(document_bits: bytes, format: str) list[Image.Image]
+        +convert_pdf_from_bytes(document_bits: bytes, format: str, pages_to_include: list[int]) list[Image.Image]
     }
 
     %% Relationships
@@ -186,7 +186,7 @@ Download and install poppler binaries from [poppler for Windows](https://github.
 usage: pdf_to_text.py [-h] -f FILE_NAME [-c NUM_COLUMNS] [-r NUM_ROWS]
                       [-s SPACE_REDUTOR] [-z FONT_SIZE_REGULATOR]
                       [-w MAX_WORKERS] [-p POPPLER_PATH] [-l LANGUAGES]
-                      [-g GPU] -o FILE_NAME_OUTPUT
+                      [-n PAGES_TO_INCLUDE] [-g GPU] -o FILE_NAME_OUTPUT
 
 OCR Formatter options.
 
@@ -221,6 +221,8 @@ options:
                         windows/releases). default = None
   -l LANGUAGES, --languages LANGUAGES
                         List of language of document. default = en,pt
+  -n PAGES_TO_INCLUDE, --pages_to_include PAGES_TO_INCLUDE
+                        List of pages to extract from PDF. default = None
   -g GPU, --gpu GPU     Flag to use GPU (1) or CPU (0) in OCR
   -o FILE_NAME_OUTPUT, --file_name_output FILE_NAME_OUTPUT
                         File name output
