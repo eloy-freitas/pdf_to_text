@@ -1,18 +1,17 @@
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 
-from .utils.log.log_utils import LogUtils
+from utils.log.log_utils import LogUtils
 
+from utils.log.log_utils import LogUtils
+from utils.file.adapters.pdf2image_adapter import PDF2ImageAdapter
+from utils.file.adapters.filetype_adapter import FIletypeAdapter
 
-from .utils.log.log_utils import LogUtils
-from .utils.file.adapters.pdf2image_adapter import PDF2ImageAdapter
-from .utils.file.adapters.filetype_adapter import FIletypeAdapter
+from controller.pdf_to_text_controller import PDFToTextController
 
-from .controller.pdf_to_text_controller import PDFToTextController
-
-from .services.file.pdf_to_image_service import PdfToImageService
-from .services.ocr.ocr_text_formatter_service import OCRTextFormatterService
-from .services.ocr.ocr_adapters.easyocr_adapter import EasyOCRAdapter
+from services.file.pdf_to_image_service import PdfToImageService
+from services.ocr.ocr_text_formatter_service import OCRTextFormatterService
+from services.ocr.ocr_adapters.easyocr_adapter import EasyOCRAdapter
 
 
 def create_pdf_to_text_controller(
