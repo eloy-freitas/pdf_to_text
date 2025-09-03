@@ -25,10 +25,6 @@ class PDFToTextController:
             pdf_to_image_service (PdfToImageService): Service for converting PDF to images
             ocr_text_formatter_service (OCRTextFormatterService): Service for OCR processing and text formatting
             log_utils (LogUtils): Logging utility instance
-            num_rows (int, optional): Number of rows for text positioning. Defaults to 35.
-            num_columns (int, optional): Number of columns for text positioning. Defaults to 20.
-            space_redutor (int, optional): Factor for reducing spacing between text elements. Defaults to 8.
-            font_size_regulator (int, optional): Factor for regulating font size calculations. Defaults to 6.
         """
         self._pdf_to_image_service = pdf_to_image_service
         self._ocr_text_formatter_service = ocr_text_formatter_service
@@ -41,8 +37,7 @@ class PDFToTextController:
         pages_to_include: list[int] = None,
         num_rows: int = 35,
         num_columns: int = 20,
-        space_redutor: int = 8, 
-        font_size_regulator: int = 6
+        space_redutor: int = 8
     ) -> str:
         """
         Execute the complete PDF to text conversion process.
@@ -50,8 +45,10 @@ class PDFToTextController:
         Args:
             file_name (str): Name of the PDF file being processed
             document_bits (bytes): Binary content of the PDF document
-            pages_to_include (list[int], optional): List of page numbers to convert.
-                                                   If None, all pages are converted.
+            pages_to_include (list[int], optional): List of page numbers to convert. If None, all pages are converted.
+            num_rows (int, optional): Number of rows for text positioning. Defaults to 35.
+            num_columns (int, optional): Number of columns for text positioning. Defaults to 20.
+            space_redutor (int, optional): Factor for reducing spacing between text elements. Defaults to 8.                                                   
             
         Returns:
             str: Formatted text extracted from the PDF document
@@ -75,8 +72,7 @@ class PDFToTextController:
                 process_object=process_object,
                 num_rows=num_rows,
                 num_columns=num_columns,
-                space_redutor=space_redutor,
-                font_size_regulator=font_size_regulator
+                space_redutor=space_redutor
             )
             
             formated_text = process_object.get('text')

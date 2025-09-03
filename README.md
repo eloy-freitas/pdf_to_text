@@ -55,9 +55,8 @@ classDiagram
         -int _num_rows
         -int _num_columns
         -int _space_redutor
-        -int _font_size_regulator
         -Logger _logger
-        +__init__(pdf_to_image_service, ocr_text_formatter_service, log_utils, num_rows, num_columns, space_redutor, font_size_regulator)
+        +__init__(pdf_to_image_service, ocr_text_formatter_service, log_utils, num_rows, num_columns, space_redutor)
         +run(file_name: str, document_bits: bytes, pages_to_include: list[int]) str
     }
 
@@ -86,11 +85,11 @@ classDiagram
         -_create_axis_classes(dataset: pd.DataFrame, axis_source_name: str, axis_target_name: str, axis_classes_name: str, num_classes: int) pd.DataFrame
         -_calculate_axis(dataset: pd.DataFrame, source_name: str, target_name: str, class_name: str, num_classes: int) pd.DataFrame
         -_map_text_positions(dataset: pd.DataFrame, num_rows: int, num_columns: int) pd.DataFrame
-        -_extract_formated_text_from_image(ocr_output: object, num_rows: int, num_columns: int, space_redutor: int, font_size_regulator: int) str
-        -_format_line(dataset: pd.DataFrame, space_redutor: int, font_size_regulator: int) str
-        -_format_output(dataset: pd.DataFrame, space_redutor: int, font_size_regulator: int) str
-        -_process_document_text(image_name: str, page_id: int, image: bytes, num_rows: int, num_columns: int, space_redutor: int, font_size_regulator: int) dict
-        +handle_request(process_object: ProcessObject, num_rows: int, num_columns: int, space_redutor: int, font_size_regulator: int) ProcessObject
+        -_extract_formated_text_from_image(ocr_output: object, num_rows: int, num_columns: int, space_redutor: int) str
+        -_format_line(dataset: pd.DataFrame, space_redutor: int) str
+        -_format_output(dataset: pd.DataFrame, space_redutor: int) str
+        -_process_document_text(image_name: str, page_id: int, image: bytes, num_rows: int, num_columns: int, space_redutor: int) dict
+        +handle_request(process_object: ProcessObject, num_rows: int, num_columns: int, space_redutor: int) ProcessObject
     }
 
     %% OCR Adapters
@@ -184,9 +183,9 @@ Download and install poppler binaries from [poppler for Windows](https://github.
 
 ```
 usage: pdf_to_text.py [-h] -f FILE_NAME [-c NUM_COLUMNS] [-r NUM_ROWS]
-                      [-s SPACE_REDUTOR] [-z FONT_SIZE_REGULATOR]
-                      [-w MAX_WORKERS] [-p POPPLER_PATH] [-l LANGUAGES]
-                      [-n PAGES_TO_INCLUDE] [-g GPU] -o FILE_NAME_OUTPUT
+                      [-s SPACE_REDUTOR] [-w MAX_WORKERS] [-p POPPLER_PATH]
+                      [-l LANGUAGES] [-n PAGES_TO_INCLUDE] [-g GPU] -o
+                      FILE_NAME_OUTPUT
 
 OCR Formatter options.
 
@@ -204,12 +203,6 @@ options:
                         Used to smooth out the addition of tabs before each
                         word on a line. (the higher the value, the fewer tabs
                         will be added). default = 8
-  -z FONT_SIZE_REGULATOR, --font_size_regulator FONT_SIZE_REGULATOR
-                        Used to compensate for spacing based on the font of
-                        the text in the document. If your document contains
-                        text in a large font size, consider increasing this
-                        value so the text doesn't appear too sparse. default =
-                        6
   -w MAX_WORKERS, --max_workers MAX_WORKERS
                         Max of parallel page processing. This will increse the
                         GPU usage. default = 2
@@ -226,7 +219,6 @@ options:
   -g GPU, --gpu GPU     Flag to use GPU (1) or CPU (0) in OCR
   -o FILE_NAME_OUTPUT, --file_name_output FILE_NAME_OUTPUT
                         File name output
-
 ```
 ### Example CLI Usage:
 ```bash
@@ -243,17 +235,19 @@ file_output = 'docs/lorem_ipsum.txt'
 
 pdf_to_text_controller = create_pdf_to_text_controller(
     languages=['pt'],
-    num_rows=35, 
-    num_columns=30,
-    space_redutor=6,
-    font_size_regulator=6,
     max_workers=2
 )    
 
 with open(file_input, "rb") as file:
     document_bits = file.read()
 
-result = pdf_to_text_controller.run(file_name=file_input, document_bits=document_bits)
+result = pdf_to_text_controller.extract_text_from_bytes(
+    file_name=file_input,
+    document_bits=document_bits,
+    num_rows=75,
+    num_columns=30,
+    space_redutor=2
+)
 
 with open(file_output, "w") as file:
     file.write(result)
