@@ -238,17 +238,20 @@ class OCRTextFormatterService:
             str: Formatted line with appropriate spacing between text elements
         """
         line_text = []
-        prev_end = 0
+        pivot = 0
+        spaces_len = 1
         
         for _, row in dataset.iterrows():
-            start_pos = row['x']
+            start_text = row['x']
             
-            if start_pos > prev_end:
-                spaces = ' ' * int((start_pos - prev_end) / space_redutor) 
-                line_text.append(spaces)
-            
+            if start_text >= pivot:
+                spaces_len = int((start_text - pivot) / (2 * (space_redutor + 1)))
+            else:
+                spaces_len = 1
+            spaces = ' ' * spaces_len                
+            line_text.append(spaces)
             line_text.append(row['text'])
-            prev_end = start_pos + row['text_length'] * font_size_regulator
+            pivot = start_text + row['text_length']
         
         return ''.join(line_text)
 
