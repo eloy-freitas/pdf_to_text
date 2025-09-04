@@ -1,27 +1,22 @@
 import argparse
-
-from src.utils.log.log_utils import LogUtils
-
 from concurrent.futures import ThreadPoolExecutor
 
-from src.utils.log.log_utils import LogUtils
-from src.utils.file.adapters.pdf2image_adapter import PDF2ImageAdapter
-from src.utils.file.adapters.filetype_adapter import FIletypeAdapter
+from utils.log.log_utils import LogUtils
 
-from src.controller.pdf_to_text_controller import PDFToTextController
+from utils.log.log_utils import LogUtils
+from utils.file.adapters.pdf2image_adapter import PDF2ImageAdapter
+from utils.file.adapters.filetype_adapter import FiletypeAdapter
 
-from src.services.file.pdf_to_image_service import PdfToImageService
-from src.services.ocr.ocr_text_formatter_service import OCRTextFormatterService
-from src.services.ocr.ocr_adapters.easyocr_adapter import EasyOCRAdapter
+from controller.pdf_to_text_controller import PDFToTextController
+
+from services.file.pdf_to_image_service import PdfToImageService
+from services.ocr.ocr_text_formatter_service import OCRTextFormatterService
+from services.ocr.ocr_adapters.easyocr_adapter import EasyOCRAdapter
 
 
 def create_pdf_to_text_controller(
     languages: list[str] | None = None,
     max_workers: int = 2,
-    num_rows: int = 35,
-    num_columns: int = 20,
-    space_redutor: int = 8, 
-    font_size_regulator: int = 6,
     gpu: bool = True,
     poppler_path: str = None
 ):
@@ -41,7 +36,6 @@ def create_pdf_to_text_controller(
         num_rows (int): Number of text rows used by the controller's formatter.
         num_columns (int): Number of text columns used by the controller's formatter.
         space_redutor (int): Space reduction parameter for the formatter.
-        font_size_regulator (int): Font-size regulation parameter for the formatter.
         gpu (bool): Whether to enable GPU in the EasyOCR adapter.
         poppler_path (str | None): Optional path to poppler binaries for PDF rendering.
     
@@ -56,7 +50,7 @@ def create_pdf_to_text_controller(
     languages = languages or ["en", "pt"]
     log_utils = LogUtils()
     pdf2image_adapter = PDF2ImageAdapter(poppler_path=poppler_path)
-    filetype_adapter = FIletypeAdapter()
+    filetype_adapter = FiletypeAdapter()
     
     ocr_pool_executor = ThreadPoolExecutor(max_workers=max_workers)
     
@@ -74,17 +68,12 @@ def create_pdf_to_text_controller(
         log_utils=log_utils,
         ocr_adapter=easyocr_adapter,
         ocr_pool_executor=ocr_pool_executor
-        
     )
     
     pdf_to_text_controller = PDFToTextController(
         pdf_to_image_service=pdf_to_image_service,
         ocr_text_formatter_service=ocr_text_formatter_service,
-        log_utils=log_utils,
-        num_rows=num_rows,
-        num_columns=num_columns,
-        space_redutor=space_redutor,
-        font_size_regulator=font_size_regulator
+        log_utils=log_utils
     )
     
     return pdf_to_text_controller
@@ -98,7 +87,6 @@ def main():
     parser.add_argument("-c", "--num_columns", type=int, required=False, default = 20, help="Number of columns of per page of the document (regulate the text position on x axis). default = 20")
     parser.add_argument("-r", "--num_rows", type=int, required=False, default = 35, help="Number of rows per page of the document (regulate the text position on y axis). default = 35")
     parser.add_argument("-s", "--space_redutor", type=int, required=False, default = 8, help="Used to smooth out the addition of tabs before each word on a line. (the higher the value, the fewer tabs will be added). default = 8")
-    parser.add_argument("-z", "--font_size_regulator", type=int, required=False, default = 6, help="Used to compensate for spacing based on the font of the text in the document. If your document contains text in a large font size, consider increasing this value so the text doesn't appear too sparse. default = 6")
     parser.add_argument("-w", "--max_workers", type=int, required=False, default = 2, help="Max of parallel page processing. This will increse the GPU usage. default = 2")
     parser.add_argument("-p", "--poppler_path", type=str, required=False, default = None, help="Path of installation of poppler binaries. Pass the path of the /bin folder in the folder of installation of the poppler. (Windows users https://github.com/oschwartz10612/poppler-windows/releases). default = None")
     parser.add_argument("-l", "--languages", type=str, required=False, default='en,pt', help="List of language of document. default = en,pt")
@@ -112,7 +100,6 @@ def main():
     logger.info(f'num_columns = {args.num_columns}')
     logger.info(f'num_rows = {args.num_rows}')
     logger.info(f'space_redutor = {args.space_redutor}')
-    logger.info(f'font_size_regulator = {args.font_size_regulator}')
     logger.info(f'max_workers = {args.max_workers}')
     logger.info(f'poppler_path = {args.poppler_path}')
     logger.info(f'languages = {args.languages}')
@@ -137,19 +124,18 @@ def main():
 
     pdf_to_text_controller = create_pdf_to_text_controller(
         languages=languages,
-        num_rows=args.num_rows, 
-        num_columns=args.num_columns,
-        space_redutor=args.space_redutor,
-        font_size_regulator=args.font_size_regulator,
         poppler_path=args.poppler_path,
         max_workers=args.max_workers,
         gpu=gpu
     )    
 
-    result = pdf_to_text_controller.run(
+    result = pdf_to_text_controller.extract_text_from_bytes(
         file_name=args.file_name, 
         document_bits=document_bits,
-        pages_to_include=pages_to_include
+        pages_to_include=pages_to_include,
+        num_rows=args.num_rows, 
+        num_columns=args.num_columns,
+        space_redutor=args.space_redutor
     )
     
     try:

@@ -68,7 +68,6 @@ class OCRTextFormatterService:
             num_rows (int): Number of rows in the positioning grid
             num_columns (int): Number of columns in the positioning grid  
             space_redutor (int): Factor for reducing spacing between text elements
-            font_size_regulator (int): Factor for regulating font size calculations
             num_classes (int): Number of classes to create for axis normalization
         Returns:
             str: Formatted text with proper spacing and positioning
@@ -183,8 +182,7 @@ class OCRTextFormatterService:
         ocr_output: object, 
         num_rows: int = 35, 
         num_columns: int = 20,
-        space_redutor: int = 8,
-        font_size_regulator: int = 6
+        space_redutor: int = 8
     ) -> str:
         """
         Extract and format text from OCR output with proper positioning.
@@ -197,7 +195,6 @@ class OCRTextFormatterService:
             num_rows (int, optional): Number of rows for grid positioning. Defaults to 35.
             num_columns (int, optional): Number of columns for grid positioning. Defaults to 20.
             space_redutor (int, optional): Factor for reducing spacing between elements. Defaults to 8.
-            font_size_regulator (int, optional): Factor for font size calculations. Defaults to 6.
             
         Returns:
             str: Formatted text with preserved layout and proper spacing
@@ -212,7 +209,7 @@ class OCRTextFormatterService:
             
             dataset = self._create_pandas_dataset(dataset)
             dataset = self._map_text_positions(dataset, num_rows, num_columns)
-            text = self._format_output(dataset, space_redutor, font_size_regulator)
+            text = self._format_output(dataset, space_redutor)
             return text
         except Exception as e:
             raise Exception(f'Fail on format ocr output: \n {e}')
@@ -220,8 +217,7 @@ class OCRTextFormatterService:
     def _format_line(
         self, 
         dataset: pd.DataFrame, 
-        space_redutor: int = 8, 
-        font_size_regulator: int = 6
+        space_redutor: int = 8
     ) -> str:
         """
         Format a single line of text with appropriate spacing.
@@ -232,31 +228,32 @@ class OCRTextFormatterService:
         Args:
             dataset (pd.DataFrame): Dataset containing text elements for a single line
             space_redutor (int, optional): Factor for calculating spaces between text elements. Defaults to 8.
-            font_size_regulator (int, optional): Factor for calculating text element widths. Defaults to 6.
             
         Returns:
             str: Formatted line with appropriate spacing between text elements
         """
         line_text = []
-        prev_end = 0
+        pivot = 0
+        spaces_len = 1
         
         for _, row in dataset.iterrows():
-            start_pos = row['x']
+            start_text = row['x']
             
-            if start_pos > prev_end:
-                spaces = ' ' * int((start_pos - prev_end) / space_redutor) 
-                line_text.append(spaces)
-            
+            if start_text >= pivot:
+                spaces_len = int((start_text - pivot) / (2 * (space_redutor + 1)))
+            else:
+                spaces_len = 1
+            spaces = ' ' * spaces_len                
+            line_text.append(spaces)
             line_text.append(row['text'])
-            prev_end = start_pos + row['text_length'] * font_size_regulator
+            pivot = start_text + row['text_length']
         
         return ''.join(line_text)
 
     def _format_output(
         self, 
         dataset: pd.DataFrame, 
-        space_redutor: int = 8, 
-        font_size_regulator: int = 6
+        space_redutor: int = 8
     ) -> str:
         """
         Format the complete document output from processed text data.
@@ -267,7 +264,6 @@ class OCRTextFormatterService:
         Args:
             dataset (pd.DataFrame): Complete dataset with positioned text elements
             space_redutor (int, optional): Factor for calculating horizontal spacing. Defaults to 8.
-            font_size_regulator (int, optional): Factor for text width calculations. Defaults to 6.
             
         Returns:
             str: Complete formatted document text with preserved layout
@@ -276,7 +272,7 @@ class OCRTextFormatterService:
         grouped = dataset.groupby('row')
         reconstructed_doc = []
         for _, group in grouped:
-            reconstructed_doc.append(self._format_line(group, space_redutor, font_size_regulator))
+            reconstructed_doc.append(self._format_line(group, space_redutor))
 
         reconstructed_doc.reverse()
 
@@ -291,8 +287,7 @@ class OCRTextFormatterService:
         image: bytes, 
         num_rows: int = 35, 
         num_columns: int = 20,
-        space_redutor: int = 8, 
-        font_size_regulator: int = 6
+        space_redutor: int = 8
     ) -> dict:
         """
         Process a single document page/image for text extraction.
@@ -307,7 +302,6 @@ class OCRTextFormatterService:
             num_rows (int, optional): Grid rows for positioning. Defaults to 35.
             num_columns (int, optional): Grid columns for positioning. Defaults to 20.
             space_redutor (int, optional): Spacing calculation factor. Defaults to 8.
-            font_size_regulator (int, optional): Font size calculation factor. Defaults to 6.
             
         Returns:
             dict: Dictionary containing 'page_id' and 'formated_text' keys
@@ -320,8 +314,7 @@ class OCRTextFormatterService:
             ocr_output=ocr_output,
             num_rows=num_rows,
             num_columns=num_columns,
-            space_redutor=space_redutor,
-            font_size_regulator=font_size_regulator
+            space_redutor=space_redutor
         )
         
         return {'page_id': page_id, 'formated_text': formated_text}
@@ -331,8 +324,7 @@ class OCRTextFormatterService:
         process_object: ProcessObject, 
         num_rows: int = 35, 
         num_columns: int = 20,
-        space_redutor: int = 8, 
-        font_size_regulator: int = 6
+        space_redutor: int = 8
     ) -> ProcessObject:
         """
         Handle the complete OCR text formatting request for multiple images.
@@ -345,7 +337,6 @@ class OCRTextFormatterService:
             num_rows (int, optional): Grid rows for text positioning. Defaults to 35.
             num_columns (int, optional): Grid columns for text positioning. Defaults to 20.
             space_redutor (int, optional): Factor for horizontal spacing calculations. Defaults to 8.
-            font_size_regulator (int, optional): Factor for font size calculations. Defaults to 6.
             
         Returns:
             ProcessObject: Updated ProcessObject with extracted text and cleaned up data
@@ -358,8 +349,7 @@ class OCRTextFormatterService:
                 meta_data['image'],
                 num_rows,
                 num_columns,
-                space_redutor,
-                font_size_regulator
+                space_redutor
             ) 
             for image_name, meta_data in process_object['images'].items()
         ]

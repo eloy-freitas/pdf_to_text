@@ -1,7 +1,7 @@
 from PIL import Image
 from io import BytesIO
 from src.model.process_object import ProcessObject
-from src.utils.file.adapters.filetype_adapter import FIletypeAdapter
+from src.utils.file.adapters.filetype_adapter import FiletypeAdapter
 from src.utils.file.adapters.pdf2image_adapter import PDF2ImageAdapter
 
 
@@ -15,14 +15,14 @@ class PdfToImageService:
     
     def __init__(
         self,
-        filetype_adapter: FIletypeAdapter,
+        filetype_adapter: FiletypeAdapter,
         pdf2image_adapter: PDF2ImageAdapter
     ) -> None:
         """
         Initialize the PdfToImageService with required adapters.
         
         Args:
-            filetype_adapter (FIletypeAdapter): Adapter for detecting file types
+            filetype_adapter (FiletypeAdapter): Adapter for detecting file types
             pdf2image_adapter (PDF2ImageAdapter): Adapter for PDF to image conversion
         """
         self._accetable_image_formats = ["png", "jpg", "jpeg", "bmp", "jiff"]
