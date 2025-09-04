@@ -1,7 +1,7 @@
 import filetype
 
 
-class FIletypeAdapter:
+class FiletypeAdapter:
     """
     Adapter for detecting file types using the filetype library.
     

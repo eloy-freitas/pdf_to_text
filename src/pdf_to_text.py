@@ -5,7 +5,7 @@ from utils.log.log_utils import LogUtils
 
 from utils.log.log_utils import LogUtils
 from utils.file.adapters.pdf2image_adapter import PDF2ImageAdapter
-from utils.file.adapters.filetype_adapter import FIletypeAdapter
+from utils.file.adapters.filetype_adapter import FiletypeAdapter
 
 from controller.pdf_to_text_controller import PDFToTextController
 
@@ -50,7 +50,7 @@ def create_pdf_to_text_controller(
     languages = languages or ["en", "pt"]
     log_utils = LogUtils()
     pdf2image_adapter = PDF2ImageAdapter(poppler_path=poppler_path)
-    filetype_adapter = FIletypeAdapter()
+    filetype_adapter = FiletypeAdapter()
     
     ocr_pool_executor = ThreadPoolExecutor(max_workers=max_workers)
     

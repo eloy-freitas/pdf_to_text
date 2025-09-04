@@ -33,7 +33,7 @@ This application provides a complete pipeline for extracting and formatting text
 #### Adapter Layer
 - **AbstractOCRAdapter**: Abstract base class for OCR implementations
 - **EasyOCRAdapter**: Concrete implementation using the EasyOCR library
-- **FIletypeAdapter**: File type detection using the filetype library
+- **FiletypeAdapter**: File type detection using the filetype library
 - **PDF2ImageAdapter**: PDF to image conversion using pdf2image library
 
 #### Utility Layer
@@ -57,7 +57,14 @@ classDiagram
         -int _space_redutor
         -Logger _logger
         +__init__(pdf_to_image_service, ocr_text_formatter_service, log_utils, num_rows, num_columns, space_redutor)
-        +run(file_name: str, document_bits: bytes, pages_to_include: list[int]) str
+        +extract_text_from_bytes(
+            file_name: str,
+            document_bits: bytes,
+            pages_to_include: list[int] = None,
+            num_rows: int = 35,
+            num_columns: int = 20,
+            space_redutor: int = 8
+        ) str
     }
 
     %% Model Layer
@@ -68,7 +75,7 @@ classDiagram
     %% Service Layer
     class PdfToImageService {
         -list[str] _accetable_image_formats
-        -FIletypeAdapter _filetype_adapter
+        -FiletypeAdapter _filetype_adapter
         -PDF2ImageAdapter _pdf2image_adapter
         +__init__(filetype_adapter, pdf2image_adapter)
         -_convert_pdf_to_images(file_name: str, file_type: str, document_bits: bytes, pages_to_include: list[int]) dict[str, bytes]
@@ -115,7 +122,7 @@ classDiagram
         +get_logger(name: str) Logger
     }
 
-    class FIletypeAdapter {
+    class FiletypeAdapter {
         +get_filetype(document_bits: bytes) str
     }
 
@@ -131,7 +138,7 @@ classDiagram
     PDFToTextController --> LogUtils : uses
     PDFToTextController --> ProcessObject : processes
 
-    PdfToImageService --> FIletypeAdapter : uses
+    PdfToImageService --> FiletypeAdapter : uses
     PdfToImageService --> PDF2ImageAdapter : uses
     PdfToImageService --> ProcessObject : modifies
 
