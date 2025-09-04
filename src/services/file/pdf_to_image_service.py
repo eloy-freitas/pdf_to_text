@@ -1,8 +1,8 @@
 from PIL import Image
 from io import BytesIO
-from src.model.process_object import ProcessObject
-from src.utils.file.adapters.filetype_adapter import FiletypeAdapter
-from src.utils.file.adapters.pdf2image_adapter import PDF2ImageAdapter
+from model.process_object import ProcessObject
+from utils.file.adapters.filetype_adapter import FiletypeAdapter
+from utils.file.adapters.pdf2image_adapter import PDF2ImageAdapter
 
 
 class PdfToImageService:

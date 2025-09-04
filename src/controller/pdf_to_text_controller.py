@@ -1,7 +1,7 @@
-from src.model.process_object import ProcessObject
-from src.utils.log.log_utils import LogUtils
-from src.services.file.pdf_to_image_service import PdfToImageService
-from src.services.ocr.ocr_text_formatter_service import OCRTextFormatterService
+from model.process_object import ProcessObject
+from utils.log.log_utils import LogUtils
+from services.file.pdf_to_image_service import PdfToImageService
+from services.ocr.ocr_text_formatter_service import OCRTextFormatterService
 
 
 class PDFToTextController:

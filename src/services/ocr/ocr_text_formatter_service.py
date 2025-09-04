@@ -1,9 +1,9 @@
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from src.utils.log.log_utils import LogUtils
-from src.model.process_object import ProcessObject
-from src.services.ocr.ocr_adapters.abstract_ocr_adapter import AbstractOCRAdapter
+from utils.log.log_utils import LogUtils
+from model.process_object import ProcessObject
+from services.ocr.ocr_adapters.abstract_ocr_adapter import AbstractOCRAdapter
 
 
 class OCRTextFormatterService:
