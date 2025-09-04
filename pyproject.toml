@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pdf_to_text"
+version = "0.1.0"
+authors = [
+  { name="Eloy de Freitas Almeida", email="freitaseloy.1@gmail.com" },
+]
+description = "A Python application that converts PDF documents and images to formatted text using OCR (Optical Character Recognition) technology."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+keywords = ["ocr", "pdf", "text"]
+dependencies = [
+  "pandas==2.3.1",
+  "easyocr==1.7.2",
+  "pdf2image==1.17.0",
+  "filetype==1.2.0"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/eloy-freitas/pdf_to_text"
+"Bug Tracker" = "https://github.com/eloy-freitas/pdf_to_text/issues"

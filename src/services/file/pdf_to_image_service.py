@@ -1,8 +1,8 @@
 from PIL import Image
 from io import BytesIO
-from src.model.process_object import ProcessObject
-from src.utils.file.adapters.filetype_adapter import FIletypeAdapter
-from src.utils.file.adapters.pdf2image_adapter import PDF2ImageAdapter
+from model.process_object import ProcessObject
+from utils.file.adapters.filetype_adapter import FiletypeAdapter
+from utils.file.adapters.pdf2image_adapter import PDF2ImageAdapter
 
 
 class PdfToImageService:
@@ -15,17 +15,17 @@ class PdfToImageService:
     
     def __init__(
         self,
-        filetype_adapter: FIletypeAdapter,
+        filetype_adapter: FiletypeAdapter,
         pdf2image_adapter: PDF2ImageAdapter
     ) -> None:
         """
         Initialize the PdfToImageService with required adapters.
         
         Args:
-            filetype_adapter (FIletypeAdapter): Adapter for detecting file types
+            filetype_adapter (FiletypeAdapter): Adapter for detecting file types
             pdf2image_adapter (PDF2ImageAdapter): Adapter for PDF to image conversion
         """
-        self._accetable_image_formats = ["png", "jpg", "jpeg", "bmp", "jiff"]
+        self._acceptable_image_formats = ["png", "jpg", "jpeg", "bmp", "jiff"]
         self._filetype_adapter = filetype_adapter
         self._pdf2image_adapter = pdf2image_adapter
          
@@ -63,13 +63,13 @@ class PdfToImageService:
                     f'{input_file_path}_____{i}.jpg': {'id': i, 'image': image} 
                     for i, image in enumerate(map(self._pil_to_binary, data), start=1)
                 }
-            elif file_type in self._accetable_image_formats:
+            elif file_type in self._acceptable_image_formats:
                 images = {input_file_path: {'id': 1, 'image': document_bits} }
             else:
                 raise Exception(
                     f'Invalid file type {file_type}.'
                     f'The application only support PDF and following images formats:'
-                    f'{self._accetable_image_formats}'
+                    f'{self._acceptable_image_formats}'
                 )
             return images
         except Exception as e:

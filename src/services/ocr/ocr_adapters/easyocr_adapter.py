@@ -62,13 +62,14 @@ class EasyOCRAdapter(AbstractOCRAdapter):
         for row in ocr_output:
             text = row[1]
             bounding_box = row[0]
-            x = self.get_x_axis(bounding_box)
+            x_start = self.get_x_axis(bounding_box)
+            x_end = bounding_box[1][0]
             y = self.get_y_axis(bounding_box)
             dataset.append({
                 'text': text,
-                'x': x, 
+                'x': x_start, 
                 'y': y, 
-                'text_length': len(text)
+                'text_length': abs(x_end - x_start)
             })
 
         return dataset
@@ -100,5 +101,5 @@ class EasyOCRAdapter(AbstractOCRAdapter):
         """
         y_start = bounding_box[0][1]
         y_end = bounding_box[1][1]
-        y = ((y_end - y_start) / 2) + y_end
+        y = ((y_end - y_start) / 2) + y_start
         return y
