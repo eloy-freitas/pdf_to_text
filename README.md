@@ -56,7 +56,7 @@ classDiagram
         -int _num_columns
         -int _space_redutor
         -Logger _logger
-        +__init__(pdf_to_image_service, ocr_text_formatter_service, log_utils, num_rows, num_columns, space_redutor)
+        +__init__(pdf_to_image_service, ocr_text_formatter_service, log_utils)
         +extract_text_from_bytes(
             file_name: str,
             document_bits: bytes,
@@ -74,7 +74,7 @@ classDiagram
 
     %% Service Layer
     class PdfToImageService {
-        -list[str] _accetable_image_formats
+        -list[str] _acceptable_image_formats
         -FiletypeAdapter _filetype_adapter
         -PDF2ImageAdapter _pdf2image_adapter
         +__init__(filetype_adapter, pdf2image_adapter)

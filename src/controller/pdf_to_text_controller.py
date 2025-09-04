@@ -68,6 +68,10 @@ class PDFToTextController:
                 process_object=process_object
             )
             
+            num_rows = max(int(num_rows), 1)
+            num_columns = max(int(num_columns), 1)
+            space_redutor = max(space_redutor, 0)
+
             process_object = self._ocr_text_formatter_service.handle_request(
                 process_object=process_object,
                 num_rows=num_rows,
